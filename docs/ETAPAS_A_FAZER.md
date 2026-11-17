@@ -14,7 +14,7 @@ Atualizado em 2026-11-09, depois de comparar a lista com o código atual.
 
 | Etapa | Assunto | Situação |
 |---|---|---|
-| 3 | Tabuleiro | Em andamento (3.1 feito; 3.2 a 3.8 não feitos) |
+| 3 | Tabuleiro | Em andamento (3.1, 3.2, 3.6 e 3.9 feitos; 3.3 a 3.5, 3.7 e 3.8 não feitos) |
 | 4 | `ObterEstadoDoJogo` | Não iniciada |
 | 5 | Movimentos | Não iniciada |
 | 6 | `EnviarJogada` | Não iniciada (método existe, mas vazio) |
@@ -28,16 +28,13 @@ Atualizado em 2026-11-09, depois de comparar a lista com o código atual.
 
 ## Etapa 3 — Tabuleiro
 
-Hoje: `Tabuleiro` tem a matriz 8x8 privada, começa vazia (todas as casas `null`) e já tem a leitura de uma casa por `Posicao` (`getPecaNaCasa`, devolve `null` para casa vazia; quem chama confere antes de usar). `Partida` ainda não tem tabuleiro.
+Hoje: `Tabuleiro` tem a matriz 8x8 privada, a leitura de uma casa por `Posicao` (`getPecaNaCasa`, devolve `null` para casa vazia; quem chama confere antes de usar), o método privado `escreverPeca` (linha e coluna) `escreverPecasIniciais()`, que monta as 32 peças, e `getPecasTabuleiro()`, que devolve o texto no formato `casa,TIPO,COR` separado por `;` (ex.: `a1,TORRE,BRANCAS;b1,CAVALO,BRANCAS`) (feito, conferido na leitura do código; falta o teste automático). O serviço cria o `Tabuleiro` e o entrega à `Partida`, que o monta quando o segundo jogador entra.
 
-- **3.2 Posição inicial padrão** — não feito. Montar as 32 peças nas casas certas (peças pretas e brancas, peões na segunda e sétima linha).
 - **3.3 Caminho livre entre duas casas** — não feito. Informar se não há peça nas casas do meio (usado por torre, bispo, rainha e pelo avanço duplo do peão).
 - **3.4 Mover e capturar** — não feito. Recusar mover de casa vazia e capturar peça da mesma cor.
 - **3.5 Localizar o rei de uma cor** — não feito.
-- **3.6 Gerar o texto do estado** — não feito. Juntar o texto das peças (item 2.2) no formato que vai em `posicaoPecas`.
 - **3.7 Simular um lance e desfazê-lo** — não feito. Necessário para a Etapa 7 (testar se o lance deixa o rei em xeque).
 - **3.8 Trocar a peça de uma casa** — não feito. Usado na promoção do peão (item 8.1).
-- Ligação a fazer: criar o tabuleiro dentro da `Partida`, montado na posição inicial quando a partida começa.
 
 ---
 

@@ -38,7 +38,7 @@ public class Posicao {
 		return linha;
 	}
 	
-	//método para transformar a jogada em um texto novamente
+	//método para transformar linha e coluna em um texto novamente
 	public String getCasa() {
 		return Character.toString((this.coluna) + 'a') + Character.toString((this.linha) + '1');
 	}

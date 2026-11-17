@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import com.xadrez.models.Jogador;
 import com.xadrez.models.Partida;
+import com.xadrez.models.Tabuleiro;
 import com.xadrez.models.enums.CorPecaEnum.CorPecas;
 
 import io.grpc.Status;

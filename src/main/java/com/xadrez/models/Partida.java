@@ -12,10 +12,12 @@ public class Partida {
 	private final Map<CorPecas, Jogador> jogadores = new EnumMap<>(CorPecas.class);
 	private EstadoDaPartida estadoDaPartida;
 	private CorPecas turno;
-    
+    private final Tabuleiro tabuleiro;
+	
 	public Partida(String idPartida) {
 		this.idPartida = idPartida;
 		this.estadoDaPartida = EstadoDaPartida.AGUARDANDO;
+		this.tabuleiro = new Tabuleiro();
 	}
 
 	public String getIdPartida() {
@@ -83,6 +85,7 @@ public class Partida {
 			this.jogadores.put(cor, jogadorParaAdicionar);
 			if(jogadores.size() == 2) {
 				this.estadoDaPartida = EstadoDaPartida.EM_ANDAMENTO;
+				this.tabuleiro.escreverPecasIniciais();
 				this.turno = CorPecas.BRANCAS;
 			}
 		}

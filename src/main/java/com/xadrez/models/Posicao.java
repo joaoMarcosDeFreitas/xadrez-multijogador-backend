@@ -1,5 +1,6 @@
 package com.xadrez.models;
 
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,12 +44,31 @@ public class Posicao {
 	}
 	
 	//método para calcular o deslocamento da coluna
-	public int getDescolamentoColuna(Posicao posicaoDestino) {
+	public int getDeslocamentoColuna(Posicao posicaoDestino) {
 		return posicaoDestino.coluna - this.coluna;
 	}
 	
 	//método para calcular o deslocamento da linha
-	public int getDescolamentoLinha(Posicao posicaoDestino) {
+	public int getDeslocamentoLinha(Posicao posicaoDestino) {
 		return posicaoDestino.linha - this.linha;
+	}
+
+	//sobreescreve os metodos para poder comparar posições iguais
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(Integer.valueOf(coluna), Integer.valueOf(linha));
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Posicao other = (Posicao) obj;
+		return coluna == other.coluna && linha == other.linha;
 	}
 }

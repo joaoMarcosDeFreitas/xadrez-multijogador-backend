@@ -8,14 +8,13 @@ Atualizado em 2026-11-09, depois de comparar a lista com o código atual.
 - Cada item tem uma linha **Hoje** (o que o código já tem) e uma linha **Falta** (o que ainda precisa ser feito).
 - Teste manual: Postman gRPC em `localhost:<porta do Main> (hoje 50040)`, sem TLS, importando `src/main/proto/xadrez.proto` (o servidor não tem reflexão ligada).
 
-**Já concluído e removido:** Etapa 1 (pré-jogo e reconexão), testada no Postman em 2026-11-04. O item 2.1 também já tinha saído da lista original.
+**Já concluído e removido:** Etapa 1 (pré-jogo e reconexão), testada no Postman em 2026-11-04. Etapa 2 (peças e coordenadas: texto da peça e `Posicao` com validação, texto, deslocamento e igualdade), conferida no código em 2026-11-17. O item 2.1 também já tinha saído da lista original.
 
 **Resumo**
 
 | Etapa | Assunto | Situação |
 |---|---|---|
-| 2 | Peças e coordenadas | Em andamento (2.5: texto feito; faltam deslocamento e igualdade) |
-| 3 | Tabuleiro | Não iniciada (só existe a matriz vazia) |
+| 3 | Tabuleiro | Em andamento (3.1 feito; 3.2 a 3.8 não feitos) |
 | 4 | `ObterEstadoDoJogo` | Não iniciada |
 | 5 | Movimentos | Não iniciada |
 | 6 | `EnviarJogada` | Não iniciada (método existe, mas vazio) |
@@ -27,19 +26,10 @@ Atualizado em 2026-11-09, depois de comparar a lista com o código atual.
 
 ---
 
-## Etapa 2 — Peças e coordenadas
-
-**2.5 Texto, deslocamento e igualdade** — *em andamento (texto feito)*
-- Hoje: `getCasa()` devolve o texto da própria casa ("e2", "a1", "h8"). Deslocamento e igualdade ainda não existem.
-- Falta: calcular o deslocamento até outra posição, mantendo o sinal (diferença de colunas e de linhas, destino menos origem). Comparar duas posições por igualdade (coluna e linha iguais; se for usar em coleções com hash, sobrescrever o hash junto). Opcional: trocar `NullPointerException` por `IllegalArgumentException` no construtor, e corrigir o comentário que diz que o caractere '2' vale 48 (vale 50).
-
----
-
 ## Etapa 3 — Tabuleiro
 
-Hoje: `Tabuleiro` tem só a matriz 8x8 vazia e um getter que entrega a matriz inteira. `Partida` ainda não tem tabuleiro.
+Hoje: `Tabuleiro` tem a matriz 8x8 privada, começa vazia (todas as casas `null`) e já tem a leitura de uma casa por `Posicao` (`getPecaNaCasa`, devolve `null` para casa vazia; quem chama confere antes de usar). `Partida` ainda não tem tabuleiro.
 
-- **3.1 Esconder a matriz e ler uma casa** — não feito. Tirar o getter que expõe a matriz e criar a leitura de uma casa por `Posicao`.
 - **3.2 Posição inicial padrão** — não feito. Montar as 32 peças nas casas certas (peças pretas e brancas, peões na segunda e sétima linha).
 - **3.3 Caminho livre entre duas casas** — não feito. Informar se não há peça nas casas do meio (usado por torre, bispo, rainha e pelo avanço duplo do peão).
 - **3.4 Mover e capturar** — não feito. Recusar mover de casa vazia e capturar peça da mesma cor.

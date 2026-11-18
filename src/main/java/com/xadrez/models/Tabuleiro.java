@@ -132,4 +132,8 @@ public class Tabuleiro {
 		
 		return moverOuCapturar(posicaoOrigem, posicaoDestino);
 	}
+	
+	public void desfazerMovimento() {
+		
+	}
 }

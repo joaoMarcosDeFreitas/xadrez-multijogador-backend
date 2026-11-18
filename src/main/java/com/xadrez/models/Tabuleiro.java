@@ -8,7 +8,7 @@ public class Tabuleiro {
 	//matriz privada: só os métodos desta classe alteram as casas, ninguém de fora escreve direto
 	private final Peca[][] tabuleiro;
 	private Peca pecaCapturadaMomento;
-	private boolean jaMexeuMomento;
+	private Boolean jaMexeuMomento;
 	private Posicao posicaoOrigemMomento;
 	private Posicao posicaoDestinoMomento;
 
@@ -125,15 +125,33 @@ public class Tabuleiro {
 	}
 	
 	public boolean simulacaoMovimento(Posicao posicaoOrigem, Posicao posicaoDestino) {
-		this.pecaCapturadaMomento = this.tabuleiro[posicaoDestino.getLinha()][posicaoDestino.getColuna()];
-		this.jaMexeuMomento = this.tabuleiro[posicaoOrigem.getLinha()][posicaoOrigem.getColuna()].getJaMexeu();
+		
+		Boolean jaMexeuLocal = this.tabuleiro[posicaoOrigem.getLinha()][posicaoOrigem.getColuna()] != null ? this.tabuleiro[posicaoOrigem.getLinha()][posicaoOrigem.getColuna()].getJaMexeu() : null;
+		Peca pecaCapturadaLocal = this.tabuleiro[posicaoDestino.getLinha()][posicaoDestino.getColuna()];
+		
+		if(!moverOuCapturar(posicaoOrigem, posicaoDestino)) return false;
+		
+		this.pecaCapturadaMomento = pecaCapturadaLocal;
+		this.jaMexeuMomento = jaMexeuLocal;
 		this.posicaoOrigemMomento = posicaoOrigem;
 		this.posicaoDestinoMomento = posicaoDestino;
-		
-		return moverOuCapturar(posicaoOrigem, posicaoDestino);
+		return true;
 	}
 	
-	public void desfazerMovimento() {
-		
+	public void desfazerMovimento() {		
+		if(this.jaMexeuMomento != null && this.posicaoOrigemMomento != null && this.posicaoDestinoMomento != null) {
+			this.tabuleiro[this.posicaoOrigemMomento.getLinha()][this.posicaoOrigemMomento.getColuna()] = this.tabuleiro[this.posicaoDestinoMomento.getLinha()][this.posicaoDestinoMomento.getColuna()];
+			this.tabuleiro[this.posicaoDestinoMomento.getLinha()][this.posicaoDestinoMomento.getColuna()] = this.pecaCapturadaMomento != null ? this.pecaCapturadaMomento : null;
+			this.tabuleiro[this.posicaoOrigemMomento.getLinha()][this.posicaoOrigemMomento.getColuna()].setJaMexeu(this.jaMexeuMomento);
+			
+			this.pecaCapturadaMomento = null;
+			this.jaMexeuMomento = null;
+			this.posicaoOrigemMomento = null;
+			this.posicaoDestinoMomento = null;
+		}
+	}
+	
+	public void trocarPeca(Posicao posicao, Peca peca) {
+		escreverPeca(peca, posicao.getLinha(), posicao.getColuna());
 	}
 }

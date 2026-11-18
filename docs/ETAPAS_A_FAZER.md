@@ -8,13 +8,12 @@ Atualizado em 2026-11-09, depois de comparar a lista com o código atual.
 - Cada item tem uma linha **Hoje** (o que o código já tem) e uma linha **Falta** (o que ainda precisa ser feito).
 - Teste manual: Postman gRPC em `localhost:<porta do Main> (hoje 50040)`, sem TLS, importando `src/main/proto/xadrez.proto` (o servidor não tem reflexão ligada).
 
-**Já concluído e removido:** Etapa 1 (pré-jogo e reconexão), testada no Postman em 2026-11-04. Etapa 2 (peças e coordenadas: texto da peça e `Posicao` com validação, texto, deslocamento e igualdade), conferida no código em 2026-11-17. O item 2.1 também já tinha saído da lista original.
+**Já concluído e removido:** Etapa 1 (pré-jogo e reconexão), testada no Postman em 2026-11-04. Etapa 2 (peças e coordenadas: texto da peça e `Posicao` com validação, texto, deslocamento e igualdade), conferida no código em 2026-11-17. Etapa 3 (tabuleiro: leitura de casa, posição inicial, caminho livre, mover/capturar, localizar o rei, texto do estado, simular/desfazer, trocar peça e ligação à `Partida`), conferida no código em 2026-11-18. Falta apenas o teste automático (Etapa 10). O item 2.1 também já tinha saído da lista original.
 
 **Resumo**
 
 | Etapa | Assunto | Situação |
 |---|---|---|
-| 3 | Tabuleiro | Em andamento (3.1 a 3.6 e 3.9 feitos; 3.7 e 3.8 não feitos) |
 | 4 | `ObterEstadoDoJogo` | Não iniciada |
 | 5 | Movimentos | Não iniciada |
 | 6 | `EnviarJogada` | Não iniciada (método existe, mas vazio) |
@@ -23,15 +22,6 @@ Atualizado em 2026-11-09, depois de comparar a lista com o código atual.
 | 9 | Robustez | Parcial (9.1 em parte) |
 | 10 | Testes | Não iniciada |
 | 11 | Entrega | Não iniciada |
-
----
-
-## Etapa 3 — Tabuleiro
-
-Hoje: `Tabuleiro` tem a matriz 8x8 privada, a leitura de uma casa por `Posicao` (`getPecaNaCasa`, devolve `null` para casa vazia; quem chama confere antes de usar), o método privado `escreverPeca` (linha e coluna) `escreverPecasIniciais()`, que monta as 32 peças, `verificarCasasDoMeio(origem, destino)` (devolve `true` se não há peça nas casas do meio; só vale para reta ou diagonal) `moverOuCapturar(origem, destino)` (devolve `false` se a origem está vazia ou o destino tem peça da mesma cor; senão move, marca "já mexeu" e devolve `true`) `procuraRei(cor)` (devolve o texto da casa do rei; lança `IllegalStateException` se não achar) e `getPecasTabuleiro()`, que devolve o texto no formato `casa,TIPO,COR` separado por `;` (ex.: `a1,TORRE,BRANCAS;b1,CAVALO,BRANCAS`) (feito, conferido na leitura do código; falta o teste automático). O serviço cria o `Tabuleiro` e o entrega à `Partida`, que o monta quando o segundo jogador entra.
-
-- **3.7 Simular um lance e desfazê-lo** — não feito. Necessário para a Etapa 7 (testar se o lance deixa o rei em xeque).
-- **3.8 Trocar a peça de uma casa** — não feito. Usado na promoção do peão (item 8.1).
 
 ---
 

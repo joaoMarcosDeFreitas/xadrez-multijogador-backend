@@ -120,4 +120,13 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 	public synchronized void enviarJogada(JogadaRequest request, io.grpc.stub.StreamObserver<com.xadrez.grpc.JogadaResponse> responseObserver) {
 		
 	}
+	
+	@Override
+	public synchronized void obterEstadoDoJogo(EstadoRequest request, io.grpc.stub.StreamObserver<com.xadrez.grpc.EstadoResponse> responseObserver) {
+		if(!partida.getIdPartida().equals(request.getIdPartida())) {
+			responseObserver.onError(Status.NOT_FOUND.withDescription("ID da partida enviado não corresponde com o ID da partida registrado").asRuntimeException()); 
+		return;
+		}
+		
+	}
 }

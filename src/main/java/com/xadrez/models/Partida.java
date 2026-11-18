@@ -7,13 +7,19 @@ import java.util.Map;
 import com.xadrez.models.enums.CorPecaEnum.CorPecas;
 import com.xadrez.models.enums.EstadoDaPartidaEnum.EstadoDaPartida;
 
+//uma partida de xadrez: guarda os jogadores (por cor), o estado, de quem é a vez e o tabuleiro
 public class Partida {
     private String idPartida;
+	//jogadores da partida, indexados pela cor (no máximo 2)
 	private final Map<CorPecas, Jogador> jogadores = new EnumMap<>(CorPecas.class);
+	//aguardando, em andamento ou concluída
 	private EstadoDaPartida estadoDaPartida;
+	//cor de quem joga agora (null até a partida começar)
 	private CorPecas turno;
+    //tabuleiro da partida: nasce vazio e é montado quando o segundo jogador entra
     private final Tabuleiro tabuleiro;
 	
+	//a partida nasce aguardando jogadores, com o tabuleiro vazio
 	public Partida(String idPartida) {
 		this.idPartida = idPartida;
 		this.estadoDaPartida = EstadoDaPartida.AGUARDANDO;
@@ -24,15 +30,17 @@ public class Partida {
 		return idPartida;
 	}
 	
+	//estado atual da partida
 	public EstadoDaPartida getEstadoDaPartida() {
 		return estadoDaPartida;
 	}
 	
+	//cor da vez (null enquanto a partida não começou)
 	public CorPecas getTurno() {
 		return turno;
 	}
 
-	//verifica se o jogador já entrou na partida
+	//verifica se o jogador já entrou na partida (compara pelo id). É assim que se reconhece uma reconexão
 	public Boolean verificaReconexao(Jogador jogadorBuscado) {
 		//looping na lista de jogadores
 		for(Jogador jogador : jogadores.values()) {
@@ -44,7 +52,7 @@ public class Partida {
 		return false;
 	}
 
-	//pega a cor da peça do jogador
+	//acha o jogador pelo id e devolve a cor e o jogador cadastrado (null se não achar). O Entry dá a cor (getKey) e os dados registrados (getValue)
 	public Map.Entry<CorPecas, Jogador> getJogador(Jogador jogadorBuscado) {
 		for(Map.Entry<CorPecas, Jogador> jogador : jogadores.entrySet()) {
 			if(jogador.getValue().getId().equals(jogadorBuscado.getId())) {
@@ -56,7 +64,7 @@ public class Partida {
 	
 	//verifica se já tem 2 jogadores
 	public Boolean verificaSeJogoEstaCheio() {
-		//cria um JSON para montar a resposta (informar ao código principal que está inválido)
+		//a partida está cheia quando já tem 2 jogadores
 		return jogadores.size() >= 2 ? true : false;
 	}
 
@@ -73,7 +81,7 @@ public class Partida {
 		return listaDeDisponibilidade;
 	}
 	
-	//adiciona um jogador ao jogo
+	//adiciona o jogador na cor escolhida. Ignora (sem avisar) se a partida já tem 2, se o jogador já entrou ou se a cor está ocupada
 	public void adicionarCorPecasJogadores(CorPecas cor, Jogador jogadorParaAdicionar) {
 		if(jogadores.size() < 2) {
 			for(Map.Entry<CorPecas, Jogador> jogador : jogadores.entrySet()) {
@@ -83,6 +91,7 @@ public class Partida {
 			}
 			//adiciona a cor e o jogador ao mapa de jogadores
 			this.jogadores.put(cor, jogadorParaAdicionar);
+			//segundo jogador entrou: a partida começa, as peças são montadas e as brancas jogam primeiro
 			if(jogadores.size() == 2) {
 				this.estadoDaPartida = EstadoDaPartida.EM_ANDAMENTO;
 				this.tabuleiro.escreverPecasIniciais();
@@ -104,6 +113,7 @@ public class Partida {
 		return jogadoresNaLista;
 	}
 	
+	//passa a vez para a outra cor (só deve ser chamado com a partida em andamento, senão o turno ainda é null)
 	public void trocarTurno() {
 		this.turno = this.turno.oposta();
 	}

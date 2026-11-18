@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import com.google.gson.JsonObject;
 import com.xadrez.utils.*;
 
+//jogador conectado: id (gerado pelo servidor) e nome
 public class Jogador {
+	//id gerado pelo servidor; é com ele que o jogador se reconecta
 	private String id;
 	private String nome;
 	
@@ -31,7 +33,7 @@ public class Jogador {
 		this.nome = nome;
 	}
 
-	//método para verificar se o nome atende as regras
+	//devolve true se o nome é válido: de 3 a 15 caracteres e diferente do nome dos jogadores que já estão na partida (sem diferenciar maiúscula)
 	public Boolean verificaNome(ArrayList<Jogador> jogadores) {
 		//verifica se tem menos que 3 letras ou mais que 15
 		if(this.nome.length() > 15 || this.nome.length() < 3) {

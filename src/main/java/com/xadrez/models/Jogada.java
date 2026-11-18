@@ -1,5 +1,6 @@
 package com.xadrez.models;
 
+//ainda em construção (item 5.7): vai guardar o jogador, a origem e o destino de uma jogada
 public class Jogada {
 	private Jogador jogador;
 	private String posicaoOrigem;

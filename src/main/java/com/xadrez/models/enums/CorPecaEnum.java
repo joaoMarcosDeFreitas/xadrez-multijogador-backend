@@ -5,6 +5,7 @@ public class CorPecaEnum {
 		BRANCAS, 
 		PRETAS;
 		
+		//devolve a cor do adversário (usada para passar a vez)
 		public CorPecas oposta() {
 			return this == BRANCAS ? PRETAS : BRANCAS;
 		}

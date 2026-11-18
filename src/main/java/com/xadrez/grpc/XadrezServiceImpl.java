@@ -14,18 +14,18 @@ import io.grpc.Status;
 public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 	//O synchronized durante todos os métodos que comunicam com o servidor (recebendo ou enviando dados) servem para não permitir que duas chamadas ocorram simultâneamente. Dessa forma, ele impede o race condition.
 	
-	//inicia a partida assim que o servidor liga
+	//inicia a partida assim que o servidor liga (existe uma só partida por servidor)
 	private final Partida partida = new Partida(UUID.randomUUID().toString());
 	
 	//INICIO DOS MÉTODOS DE CONEXÃO DO JOGADOR
 	
-	//método de conectar jogador com o que vier do grpc
+	//conecta um jogador. Id já conhecido = reconexão (devolve os dados dele). Jogador novo passa pela validação do nome e da sala e recebe cor e id novo
 	@Override
 	public synchronized void conectarJogador(ConectarRequest request, io.grpc.stub.StreamObserver<com.xadrez.grpc.ConectarResponse> responseObserver) {
 		//verificações da partida (se está livre para entrada de jogadores e quais cores estão livres -> assim define quantos jogadores tem em sala)
 		
 		//De qualquer forma, precisamos iniciar o jogador que vai entrar.
-		//cria o objeto jogador com ID novo ou se já foi enviado um ID ele cria com o ID enviado
+		//cria o jogador com o id e o nome que vieram do cliente (o id só vale para reconexão; o jogador novo recebe um id gerado mais abaixo)
 		Jogador jogador = new Jogador(request.getIdJogador().trim(), request.getNomeJogador().trim());
 
 		//verifica se é reconexão
@@ -64,6 +64,7 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 			//Adiciona a cor ao jogador, sempre com índice 0 para garantir que pega sempre o primeiro. (Quem entra primeiro sempre é branca)
 			CorPecas corPecaEscolhida = coresDisponiveis.get(0);
 			partida.adicionarCorPecasJogadores(corPecaEscolhida, jogador);
+			//o servidor sempre gera o id do jogador novo (o id enviado pelo cliente é ignorado)
 			jogador.setId(UUID.randomUUID().toString());
 			//utiliza o método para retornar sucesso ao servidor
 			responderServidorSucessoConectarJogador(responseObserver, jogador, corPecaEscolhida);
@@ -72,7 +73,7 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 		}
 	}
 	
-	//método para responder o servidor com erro. (REFERENTE A CONEXÃO DE JOGADOR)
+	//responde com erro gRPC. Código "9" (sala cheia) vira FAILED_PRECONDITION, "3" (nome inválido) vira INVALID_ARGUMENT e qualquer outro vira UNKNOWN
 	public void responderServidorErroConectarJogador(io.grpc.stub.StreamObserver<com.xadrez.grpc.ConectarResponse> responseObserver, String codigo, String descricao) {
 		//inicia a exceção que será jogada ao usuário (para saber porque não funcionou)
 		Throwable excecao;
@@ -114,7 +115,7 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 	
 	//INICIO DOS MÉTODOS DE ENVIAR JOGADAS
 	
-	//método para computar as jogadas do jogador
+	//ainda vazio (Etapa 6): vai validar e aplicar a jogada. É synchronized para não processar duas jogadas ao mesmo tempo
 	@Override 
 	public synchronized void enviarJogada(JogadaRequest request, io.grpc.stub.StreamObserver<com.xadrez.grpc.JogadaResponse> responseObserver) {
 		

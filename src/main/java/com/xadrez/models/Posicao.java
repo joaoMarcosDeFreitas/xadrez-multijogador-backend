@@ -4,13 +4,17 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+//representa UMA casa do tabuleiro (ex.: e2) em índices de 0 a 7. Não muda depois de criada (final) e só existe se o texto for válido
 public class Posicao {
+	//coluna = letra da casa (a = 0 ... h = 7)
 	private final int coluna;
+	//linha = número da casa (1 = 0 ... 8 = 7). A linha 1 é o índice 0 da matriz
 	private final int linha;
 	
+	//cria a posição a partir do texto da casa (ex.: "e2"). Se o texto for inválido lança exceção, então uma posição inválida nunca existe
 	public Posicao(String casaDestino) {
 		super();
-		//validador de padrão
+		//validador de padrão: uma letra de a a h seguida de um número de 1 a 8 (maiúscula ou minúscula) e nada mais
 		Pattern padraoBuscado = Pattern.compile("\\b([a-h])([1-8])\\b", Pattern.CASE_INSENSITIVE);
 		Matcher buscaPadrao = padraoBuscado.matcher(casaDestino);	
 				
@@ -30,30 +34,32 @@ public class Posicao {
 		}
 	}
 	
+	//índice da coluna (0 a 7)
 	public int getColuna() {
 		return coluna;
 	}
 	
+	//índice da linha (0 a 7)
 	public int getLinha() {
 		return linha;
 	}
 	
-	//método para transformar linha e coluna em um texto novamente
+	//devolve o texto da casa (ex.: coluna 4 e linha 1 viram "e2"). É o caminho inverso do construtor
 	public String getCasa() {
 		return Character.toString((this.coluna) + 'a') + Character.toString((this.linha) + '1');
 	}
 	
-	//método para calcular o deslocamento da coluna
+	//deslocamento da coluna = destino menos origem (mantém o sinal: negativo = esquerda, positivo = direita). As regras de movimento usam isso
 	public int getDeslocamentoColuna(Posicao posicaoDestino) {
 		return posicaoDestino.coluna - this.coluna;
 	}
 	
-	//método para calcular o deslocamento da linha
+	//deslocamento da linha = destino menos origem (mantém o sinal: positivo = linha maior). O sinal importa para o peão e para o caminho livre
 	public int getDeslocamentoLinha(Posicao posicaoDestino) {
 		return posicaoDestino.linha - this.linha;
 	}
 
-	//sobreescreve os metodos para poder comparar posições iguais
+	//duas posições são iguais se têm a mesma coluna e a mesma linha. O hashCode usa os mesmos campos (regra do Java: iguais têm o mesmo hash)
 	
 	@Override
 	public int hashCode() {

@@ -1,6 +1,6 @@
 # O que falta fazer — Back-end do Xadrez (servidor gRPC)
 
-Atualizado em 2026-11-09, depois de comparar a lista com o código atual.
+Atualizado em 2026-11-19, depois de comparar a lista com o código atual.
 
 **Como usar este arquivo**
 - Trabalhar uma sub-etapa por vez.
@@ -8,15 +8,14 @@ Atualizado em 2026-11-09, depois de comparar a lista com o código atual.
 - Cada item tem uma linha **Hoje** (o que o código já tem) e uma linha **Falta** (o que ainda precisa ser feito).
 - Teste manual: Postman gRPC em `localhost:<porta do Main> (hoje 50040)`, sem TLS, importando `src/main/proto/xadrez.proto` (o servidor não tem reflexão ligada).
 
-**Já concluído e removido:** Etapa 1 (pré-jogo e reconexão), testada no Postman em 2026-11-04. Etapa 2 (peças e coordenadas: texto da peça e `Posicao` com validação, texto, deslocamento e igualdade), conferida no código em 2026-11-17. Etapa 3 (tabuleiro: leitura de casa, posição inicial, caminho livre, mover/capturar, localizar o rei, texto do estado, simular/desfazer, trocar peça e ligação à `Partida`), conferida no código em 2026-11-18. Falta apenas o teste automático (Etapa 10). O item 2.1 também já tinha saído da lista original.
+**Decisão do João (2026-11-19): todos os testes ficam juntos na Etapa 10; nenhum teste é feito durante as etapas anteriores.**
+
+**Já concluído e removido:** Etapa 1 (pré-jogo e reconexão), testada no Postman em 2026-11-04. Etapa 2 (peças e coordenadas: texto da peça e `Posicao` com validação, texto, deslocamento e igualdade), conferida no código em 2026-11-17. Etapa 3 (tabuleiro: leitura de casa, posição inicial, caminho livre, mover/capturar, localizar o rei, texto do estado, simular/desfazer, trocar peça e ligação à `Partida`), conferida no código em 2026-11-18. Etapa 4 (`ObterEstadoDoJogo`: `NOT_FOUND` para partida inexistente, texto das peças, turno e estado), conferida no código em 2026-11-19. Etapa 6 (`EnviarJogada`: conferências de partida, jogador, estado e vez; posições; validação pelas regras, movimento, troca de turno e resposta `jogadaValida` falsa com o motivo), conferida no código em 2026-11-19. Etapa 5 (movimentos: `ValidadorRegras` com peão, torre, bispo, rainha, cavalo e rei, e `Jogada` com `Posicao` e resultado da validação), conferida no código em 2026-11-19. O item 2.1 também já tinha saído da lista original.
 
 **Resumo**
 
 | Etapa | Assunto | Situação |
 |---|---|---|
-| 4 | `ObterEstadoDoJogo` | Não iniciada |
-| 5 | Movimentos | Não iniciada |
-| 6 | `EnviarJogada` | Não iniciada (método existe, mas vazio) |
 | 7 | Fim de jogo | Não iniciada |
 | 8 | Regras avançadas | Não iniciada |
 | 9 | Robustez | Parcial (9.1 em parte) |
@@ -25,47 +24,10 @@ Atualizado em 2026-11-09, depois de comparar a lista com o código atual.
 
 ---
 
-## Etapa 4 — `ObterEstadoDoJogo`
-
-Hoje: o `.proto` já declara o método, com `EstadoRequest` (id da partida) e `EstadoResponse` (`posicaoPecas`, `turnoAtual`, `estadoJogo`). O serviço ainda não implementa o método. A `Partida` já tem `getTurno()` e `getEstadoDaPartida()`.
-
-- **4.1 Registrar o método no serviço** — não feito. Responder `NOT_FOUND` para partida inexistente e manter a sincronização como nos outros métodos.
-- **4.2 Devolver o texto das peças** — não feito (depende dos itens 2.2 e 3.6).
-- **4.3 Devolver turno e estado** — não feito. Os dados já existem na `Partida`; falta converter em texto e preencher a resposta.
-
----
-
-## Etapa 5 — Movimentos
-
-Hoje: existe `Jogada`, com jogador, origem e destino como textos e setters.
-
-- **5.1 Validador de regras como classe própria** — não feito.
-- **5.2 Peão** — não feito. Andar uma casa, duas na primeira jogada, capturar na diagonal; direção conforme a cor.
-- **5.3 Torre** — não feito.
-- **5.4 Bispo e rainha** — não feito.
-- **5.5 Cavalo** — não feito.
-- **5.6 Rei** — não feito (uma casa em qualquer direção; o roque fica no 8.2).
-- **5.7 `Jogada`** — não feito. Origem e destino passam a ser `Posicao`, sem setters. Origem diferente do destino. Guardar o resultado da validação.
-
----
-
-## Etapa 6 — `EnviarJogada`
-
-Hoje: o método existe no serviço, mas está vazio. Ele não responde, então o cliente fica esperando até estourar o tempo.
-
-- **6.1 Conferir partida e jogador** — não feito.
-- **6.2 Conferir estado da partida e vez do jogador** — não feito. Recusar se a partida não estiver em andamento ou se o turno for da outra cor. A `Partida` já tem o necessário (`getTurno`, `getEstadoDaPartida`, `trocarTurno`).
-- **6.3 Converter e validar as posições** — não feito (depende da Etapa 2).
-- **6.4 Validar pelas regras, aplicar e passar o turno** — não feito (depende das Etapas 3 e 5).
-- **6.5 Jogada ilegal** — não feito. Responder normalmente com `jogadaValida` falso e o motivo em `mensagemRetorno`, sem erro gRPC.
-
----
-
 ## Etapa 7 — Fim de jogo
 
-- **7.1 Nenhum lance pode deixar o próprio rei em xeque** — não feito (usa 3.5 e 3.7).
-- **7.2 Detectar xeque** — não feito.
-- **7.3 Detectar xeque-mate** — não feito.
+Hoje: o `ValidadorRegras.verificaXeque(tabuleiro, cor)` (privado) já devolve `true` se o rei da cor está em xeque: procura o rei e pergunta ao `validaMovimento` se alguma peça adversária consegue ir até ele (item 7.2 feito). O `verificaLanceLegal(tabuleiro, origem, destino)` (público) simula o lance, vê se o rei da cor de quem jogou ficou em xeque e sempre desfaz; a `Partida.validaMovimento` já usa esse método, então um lance que deixa o próprio rei em xeque é recusado com "Movimento inválido!" (item 7.1 feito). O `verificaXequeMate(tabuleiro, cor)` (público) devolve `true` se o rei está em xeque e nenhuma peça da cor tem lance legal para nenhuma das 64 casas (item 7.3 feito).
+
 - **7.4 Detectar afogamento** — não feito.
 - **7.5 Resultado no estado e campo novo no `.proto`** — não feito. O estado `CONCLUIDA` já existe no enum, mas nada o define. O `EstadoResponse` não tem campo de resultado.
 
@@ -85,7 +47,7 @@ Hoje: `Peca` já guarda "já mexeu", que o roque e o avanço duplo do peão vão
 
 ## Etapa 9 — Robustez
 
-- **9.1 Status gRPC restantes** — *parcial*. Hoje a conexão usa `INVALID_ARGUMENT` e `FAILED_PRECONDITION` (e `UNKNOWN` como padrão). Faltam `NOT_FOUND` (partida inexistente) e `PERMISSION_DENIED` (jogador que não pertence à partida).
+- **9.1 Status gRPC restantes** — *parcial*. Hoje a conexão usa `INVALID_ARGUMENT` e `FAILED_PRECONDITION` (e `UNKNOWN` como padrão). O `NOT_FOUND` já é usado no `ObterEstadoDoJogo` (id de partida errado). Falta usá-lo no `EnviarJogada` e `PERMISSION_DENIED` (jogador que não pertence à partida).
 - **9.2 `INTERNAL` para exceção inesperada** — não feito.
 - **9.3 Falha do `Main` sem mensagem nula** — não feito. O `catch` ainda usa a mensagem da exceção direto; se ela for nula, o próprio `catch` quebra.
 - **9.4 `.gitignore` e `target/` fora do versionamento** — não feito. Não existe `.gitignore`, e arquivos de `target/` aparecem como modificados no git, ou seja, estão versionados e precisam sair do controle.
@@ -99,6 +61,7 @@ Hoje: as pastas `src/test/java` e `src/test/resources` existem, vazias. O `pom.x
 - **10.1 Testes das regras** — não feito (posição, tabuleiro, cada peça, xeque, fim de jogo).
 - **10.2 Testes de integração com o serviço em memória** — não feito (conexão, jogada válida e inválida, estado).
 - A conexão de jogadores já foi testada à mão no Postman (Etapa 1), mas não há teste automatizado dela.
+- **10.3 Testes manuais no Postman (todas as etapas feitas até aqui)** — não feito. Conectar dois jogadores; `ObterEstadoDoJogo` (um jogador, dois jogadores, id errado); `EnviarJogada` (e2 para e4 das brancas, jogada fora da vez, e7 para e5 das pretas, jogada ilegal como a1 para a5, texto de posição inválido, id de partida e de jogador errados); conferir o texto das peças e o turno depois de cada jogada.
 
 ---
 
@@ -119,10 +82,22 @@ Hoje: as pastas `src/test/java` e `src/test/resources` existem, vazias. O `pom.x
 
 ---
 
+## Limpeza final (depois de tudo funcionando)
+
+Combinado com o João: remover redundâncias e limpar o código só no fim. Anotadas até agora:
+- `Utils` (e a dependência do Gson no `pom.xml`) não é mais usado em nenhum lugar, porque `Jogador.verificaNome` e `Partida.verificaSeJogoEstaCheio` passaram a devolver `boolean`.
+- `ValidadorRegras.movimentoBispo` e `movimentoTorre`: condições repetidas e checagens que se sobrepõem (`!= 0` junto com valor absoluto igual; origem diferente do destino que a `Jogada` já garante).
+- `ValidadorRegras.movimentoPeao`: a mesma conta de deslocamento é feita várias vezes; dá para guardar em variáveis locais.
+- `Tabuleiro.desfazerMovimento`: `pecaCapturadaMomento != null ? pecaCapturadaMomento : null` equivale a só `pecaCapturadaMomento`; e o `;;` em `moverOuCapturar`.
+- `Tabuleiro.getCasa(linha, coluna)` e `Posicao.getCasa()` repetem a mesma conta.
+- `Posicao.hashCode`: os `Integer.valueOf` são desnecessários.
+- `Partida.verificaSeJogoEstaCheio`: `? true : false` é redundante.
+- Os quatro laços "para cada peça da cor, para cada casa de destino, existe lance legal?" do `verificaXequeMate` (e do afogamento, 7.4) são os mesmos: dá para virar um método só.
+- Comentários desatualizados (por exemplo, no `Jogada`) e os que o João pediu para refazer.
+- Mensagem "A partida ainda não começou." no `EnviarJogada` vale também para partida concluída (ajustar na Etapa 7).
+
 ## Ordem sugerida
 
-1. Etapa 2 (a `Posicao` e o texto da peça são base de tudo).
-2. Etapa 3 (tabuleiro) e depois Etapa 4 (estado), que já dá para testar no Postman.
-3. Etapas 5 e 6 (movimentos e `EnviarJogada`).
-4. Etapas 7 e 8 (fim de jogo e regras avançadas).
-5. Etapas 9, 10 e 11 (robustez, testes e entrega). O item 9.4 (`.gitignore`) pode ser feito a qualquer momento.
+1. Etapas 5 e 6 (movimentos e `EnviarJogada`): deixam o jogo jogável pelo Postman.
+2. Etapas 7 e 8 (fim de jogo e regras avançadas).
+3. Etapas 9, 10 e 11 (robustez, testes e entrega). O item 9.4 (`.gitignore`) pode ser feito a qualquer momento.

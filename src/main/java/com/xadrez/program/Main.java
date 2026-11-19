@@ -6,11 +6,11 @@ import io.grpc.ServerBuilder;
 
 //ponto de entrada: liga o servidor gRPC
 public class Main {
-
+	//liga o servidor e fica esperando conexões até ele ser encerrado
 	public static void main(String[] args) {
 		try {
 			System.out.println("Servidor rodando na porta 50040 🚀");
-			//sobe o servidor na porta 50040 com o serviço do xadrez e fica esperando conexões
+			//cria o servidor na porta 50040 com o serviço do xadrez, liga e espera até ser encerrado
 			ServerBuilder.forPort(50040)
 			.addService(new XadrezServiceImpl())
 			.build()
@@ -22,5 +22,4 @@ public class Main {
 			System.out.println(e.getMessage().toString());
 		}
 	}
-
 }

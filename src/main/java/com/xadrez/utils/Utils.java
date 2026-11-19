@@ -2,9 +2,9 @@ package com.xadrez.utils;
 
 import com.google.gson.JsonObject;
 
-//classe para reaproveitar códigos (métodos e funções) que são utilizados em muitos locais e não pertencem a um grupo particular
+//classe para reaproveitar códigos que são usados em vários lugares e não pertencem a um grupo particular
 public class Utils {
-	//método para montar a resposta em JSON que é enviada ao IMPL
+	//monta um JSON com um código e uma descrição. Não está em uso no momento (as verificações passaram a devolver boolean)
 	public static JsonObject montaRespotaJsonObject(String codigo, String descricao) {
 		//cria um JSON para montar a resposta (informar ao código principal que está inválido)
 		JsonObject resposta = new JsonObject();

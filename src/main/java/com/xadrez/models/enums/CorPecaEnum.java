@@ -1,7 +1,9 @@
 package com.xadrez.models.enums;
 
+//só agrupa o enum das cores das peças
 public class CorPecaEnum {
 	public enum CorPecas {
+		//as duas cores do jogo
 		BRANCAS, 
 		PRETAS;
 		

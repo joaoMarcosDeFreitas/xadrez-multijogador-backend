@@ -178,4 +178,20 @@ public class Tabuleiro {
 	private void escreverPeca(Peca peca, int linha, int coluna) {
 		this.tabuleiro[linha][coluna] = peca;
 	}
+	
+	public void moverTorreRoque(Posicao posicaoOrigemRei, Posicao posicaoDestinoRei) {
+		int sentidoDoMovimentoRei = Integer.signum(posicaoOrigemRei.getDeslocamentoColuna(posicaoDestinoRei));
+		int colunaDestinoTorre = posicaoDestinoRei.getColuna() - sentidoDoMovimentoRei;
+		
+		Posicao posicaoOrigemTorre;
+		
+		if(sentidoDoMovimentoRei == 1) {
+			posicaoOrigemTorre = new Posicao(getCasa(posicaoOrigemRei.getLinha(), 7));
+		}else {
+			posicaoOrigemTorre = new Posicao(getCasa(posicaoOrigemRei.getLinha(), 0));
+		}
+		
+		Posicao posicaoDestinoTorre = new Posicao(getCasa(posicaoOrigemRei.getLinha(), colunaDestinoTorre));
+		moverOuCapturar(posicaoOrigemTorre, posicaoDestinoTorre);
+	}
 }

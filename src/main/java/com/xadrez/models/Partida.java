@@ -210,4 +210,8 @@ public class Partida {
 	public boolean verificaRoque(Posicao posicaoOrigem, Posicao posicaoDestino) {
 		return validador.verificaRoque(tabuleiro, posicaoOrigem, posicaoDestino);
 	}
+	
+	public void moverTorreRoque(Posicao posicaoOrigemRei, Posicao posicaoDestinoRei) {
+		tabuleiro.moverTorreRoque(posicaoOrigemRei, posicaoDestinoRei);
+	}
 }

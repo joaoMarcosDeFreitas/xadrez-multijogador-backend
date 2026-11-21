@@ -25,9 +25,8 @@ Atualizado em 2026-11-19, depois de comparar a lista com o código atual.
 
 ## Etapa 8 — Regras avançadas
 
-Hoje: `Peca` já guarda "já mexeu", que o roque e o avanço duplo do peão vão usar. A promoção do peão (8.1) está feita: o `JogadaRequest` tem o campo `promocao`, o `ValidadorRegras.verificaPromocao` diz se há peão na última linha, a `Partida.promocao` troca pela peça escolhida (rainha por padrão se o texto for inválido ou vazio) e o `enviarJogada` chama isso depois do movimento e antes de passar a vez.
+Hoje: `Peca` já guarda "já mexeu", que o roque e o avanço duplo do peão vão usar. A promoção do peão (8.1) está feita: o `JogadaRequest` tem o campo `promocao`, o `ValidadorRegras.verificaPromocao` diz se há peão na última linha, a `Partida.promocao` troca pela peça escolhida (rainha por padrão se o texto for inválido ou vazio) e o `enviarJogada` chama isso depois do movimento e antes de passar a vez. O roque (8.2) está feito: `ValidadorRegras.verificaRoque` (formato, rei e torre sem ter se movido, caminho livre até a torre) e `verificaRoqueSeguro` (rei sem xeque, sem passar nem terminar em casa atacada); `Partida.validaMovimento` aceita o lance legal normal ou o roque seguro; o `enviarJogada` pergunta `verificaRoque` antes de mover o rei e, se era roque, chama `moverTorreRoque` (a torre vai para a casa por onde o rei passou). Falta o en passant, que não está na lista original.
 
-- **8.2 Roque** — não feito.
 - **8.3 Empate por material insuficiente** — não feito.
 - **8.4 Empate pela regra dos 50 lances** — não feito.
 - **8.5 Empate por repetição de posição** — não feito.

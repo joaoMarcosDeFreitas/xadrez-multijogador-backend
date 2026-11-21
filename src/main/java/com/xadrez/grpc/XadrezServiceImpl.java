@@ -135,6 +135,8 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 			return;
 		}
 		
+		boolean eRoque = partida.verificaRoque(posicaoOrigem, posicaoDestino);
+		
 		//8. faz o movimento (o tabuleiro ainda recusa destino com peça da mesma cor)
 		if(!partida.moverOuCapturar(posicaoOrigem, posicaoDestino)) {
 			JogadaResponse mensagem = JogadaResponse.newBuilder()
@@ -145,6 +147,8 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 			responseObserver.onCompleted();
 			return;
 		}
+		
+		if(eRoque) partida.moverTorreRoque(posicaoOrigem, posicaoDestino);
 		
 		if(partida.verificaPromocao(posicaoDestino)) partida.promocao(posicaoDestino, request.getPromocao());
 		

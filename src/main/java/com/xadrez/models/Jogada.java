@@ -1,6 +1,7 @@
 package com.xadrez.models;
 
 //uma tentativa de jogada: quem jogou, a casa de origem e a de destino (não mudam) e o resultado da validação (aceita ou não, e o motivo)
+//por enquanto o serviço não usa esta classe: ele valida e responde direto, sem criar uma Jogada
 public class Jogada {
 	//quem fez a jogada
 	private Jogador jogador;

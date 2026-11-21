@@ -4,6 +4,7 @@ import com.xadrez.models.enums.CorPecaEnum.CorPecas;
 import com.xadrez.models.enums.PecaEnum.TipoPeca;
 
 //o tabuleiro: 64 casas numa matriz [linha][coluna]. Cada casa tem uma Peca ou null (vazia). A linha 1 do xadrez é o índice 0 (brancas)
+//aqui ficam só as operações sobre as casas (ler, montar, mover). As regras de cada peça ficam no ValidadorRegras
 public class Tabuleiro {
 	//---- dados do tabuleiro ----
 	//matriz privada: só os métodos desta classe alteram as casas, ninguém de fora escreve direto
@@ -96,7 +97,7 @@ public class Tabuleiro {
 	}
 
 	//---- movimentos ----
-	//devolve true se NÃO há peça entre a origem e o destino (as duas pontas não contam). Só vale para reta ou diagonal (torre, bispo, rainha, avanço duplo do peão)
+	//devolve true se NÃO há peça entre a origem e o destino (as duas pontas não contam). Só vale para reta ou diagonal (torre, bispo, rainha, avanço duplo do peão, roque)
 	public boolean verificarCasasEntreOrigemDestino(Posicao posicaoOrigem, Posicao posicaoDestino) {
 		//passo de cada volta (-1, 0 ou 1 em cada direção): o signum reduz o deslocamento a uma casa por vez
 		int linhasAndadas = Integer.signum(posicaoOrigem.getDeslocamentoLinha(posicaoDestino));
@@ -129,11 +130,33 @@ public class Tabuleiro {
 		if(pecaDestino != null && peca.getCor().equals(pecaDestino.getCor())) return false;
 		
 		//coloca a peça no destino (substitui a capturada, se houver) e esvazia a origem
-		escreverPeca(peca, posicaoDestino.getLinha(), posicaoDestino.getColuna());;
+		escreverPeca(peca, posicaoDestino.getLinha(), posicaoDestino.getColuna());
 		escreverPeca(null, posicaoOrigem.getLinha(), posicaoOrigem.getColuna());
 		//marca que a peça já se moveu (roque e avanço duplo do peão)
 		peca.setJaMexeu(true);
 		return true;
+	}
+
+	//move a torre do roque, depois que o rei já foi movido: ela sai do canto (coluna 7 ou 0) e vai para a casa por onde o rei passou
+	public void moverTorreRoque(Posicao posicaoOrigemRei, Posicao posicaoDestinoRei) {
+		//+1 = roque para a direita, -1 = roque para a esquerda
+		int sentidoDoMovimentoRei = Integer.signum(posicaoOrigemRei.getDeslocamentoColuna(posicaoDestinoRei));
+		//a torre termina na casa por onde o rei passou (a coluna do destino do rei menos o sentido)
+		int colunaDestinoTorre = posicaoDestinoRei.getColuna() - sentidoDoMovimentoRei;
+		
+		//casa de onde a torre sai: o canto da linha do rei (coluna 7 para a direita, coluna 0 para a esquerda)
+		Posicao posicaoOrigemTorre;
+		
+		if(sentidoDoMovimentoRei == 1) {
+			posicaoOrigemTorre = new Posicao(getCasa(posicaoOrigemRei.getLinha(), 7));
+		}else {
+			posicaoOrigemTorre = new Posicao(getCasa(posicaoOrigemRei.getLinha(), 0));
+		}
+		
+		//casa para onde a torre vai
+		Posicao posicaoDestinoTorre = new Posicao(getCasa(posicaoOrigemRei.getLinha(), colunaDestinoTorre));
+		//move a torre (o moverOuCapturar também marca que ela já se moveu)
+		moverOuCapturar(posicaoOrigemTorre, posicaoDestinoTorre);
 	}
 
 	//faz o movimento de teste, guardando antes o que for preciso para desfazer. Devolve false se o movimento foi recusado (e então não há nada para desfazer). Só há uma simulação por vez
@@ -177,21 +200,5 @@ public class Tabuleiro {
 	//único ponto que grava na matriz (usado na montagem, no movimento e na troca de peça). Grava sem conferir nada: as conferências ficam em quem chama. Passar null esvazia a casa
 	private void escreverPeca(Peca peca, int linha, int coluna) {
 		this.tabuleiro[linha][coluna] = peca;
-	}
-	
-	public void moverTorreRoque(Posicao posicaoOrigemRei, Posicao posicaoDestinoRei) {
-		int sentidoDoMovimentoRei = Integer.signum(posicaoOrigemRei.getDeslocamentoColuna(posicaoDestinoRei));
-		int colunaDestinoTorre = posicaoDestinoRei.getColuna() - sentidoDoMovimentoRei;
-		
-		Posicao posicaoOrigemTorre;
-		
-		if(sentidoDoMovimentoRei == 1) {
-			posicaoOrigemTorre = new Posicao(getCasa(posicaoOrigemRei.getLinha(), 7));
-		}else {
-			posicaoOrigemTorre = new Posicao(getCasa(posicaoOrigemRei.getLinha(), 0));
-		}
-		
-		Posicao posicaoDestinoTorre = new Posicao(getCasa(posicaoOrigemRei.getLinha(), colunaDestinoTorre));
-		moverOuCapturar(posicaoOrigemTorre, posicaoDestinoTorre);
 	}
 }

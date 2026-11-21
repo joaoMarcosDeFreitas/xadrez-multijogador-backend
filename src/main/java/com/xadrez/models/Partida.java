@@ -2,6 +2,7 @@ package com.xadrez.models;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.xadrez.models.enums.CorPecaEnum.CorPecas;
@@ -9,22 +10,30 @@ import com.xadrez.models.enums.EstadoDaPartidaEnum.EstadoDaPartida;
 import com.xadrez.models.enums.PecaEnum.TipoPeca;
 import com.xadrez.models.enums.ResultadoEnum.Resultado;
 
-//uma partida de xadrez: guarda os jogadores (por cor), o estado, de quem é a vez e o tabuleiro. É o ponto de entrada do serviço: o tabuleiro e o validador ficam escondidos aqui dentro
+//uma partida de xadrez: guarda os jogadores (por cor), o estado, de quem é a vez, o resultado e o tabuleiro
+//é o ponto de entrada do serviço: o tabuleiro e o validador ficam escondidos aqui dentro, e o serviço só fala com a Partida
 public class Partida {
-    //---- dados da partida ----
-    //identificador da partida (gerado quando o servidor liga)
-    private String idPartida;
+	//---- dados da partida ----
+	//identificador da partida (gerado quando o servidor liga)
+	private String idPartida;
 	//jogadores da partida, indexados pela cor (no máximo 2)
 	private final Map<CorPecas, Jogador> jogadores = new EnumMap<>(CorPecas.class);
 	//aguardando, em andamento ou concluída
 	private EstadoDaPartida estadoDaPartida;
 	//cor de quem joga agora (null até a partida começar)
 	private CorPecas turno;
-    //tabuleiro da partida: nasce vazio e é montado quando o segundo jogador entra
-    private final Tabuleiro tabuleiro;
-    //confere se o movimento de uma peça é permitido pelas regras dela
-    private final ValidadorRegras validador;
-    private Resultado resultado;
+	//como a partida terminou (null enquanto não terminou)
+	private Resultado resultado;
+	//tabuleiro da partida: nasce vazio e é montado quando o segundo jogador entra
+	private final Tabuleiro tabuleiro;
+	//confere as regras do xadrez (movimento, xeque, mate, afogamento, roque, promoção)
+	private final ValidadorRegras validador;
+
+	//---- dados das regras de empate ----
+	//jogadas seguidas sem captura e sem movimento de peão (regra dos 50 lances)
+	private int contadorJogadas;
+	//quantas vezes cada posição já apareceu (chave = peças + vez de jogar). Serve para o empate por repetição
+	private Map<String, Integer> repeticoesDaMesaJogada = new HashMap<>();
 
 	//---- construtor ----
 	//a partida nasce aguardando jogadores, com o tabuleiro vazio
@@ -45,7 +54,8 @@ public class Partida {
 	public EstadoDaPartida getEstadoDaPartida() {
 		return estadoDaPartida;
 	}
-	
+
+	//como a partida terminou (null enquanto não terminou)
 	public Resultado getResultado() {
 		return resultado;
 	}
@@ -147,7 +157,7 @@ public class Partida {
 		this.turno = this.turno.oposta();
 	}
 
-	//---- tabuleiro (a Partida repassa ao Tabuleiro e ao ValidadorRegras) ----
+	//---- tabuleiro e regras (a Partida repassa ao Tabuleiro e ao ValidadorRegras) ----
 	//texto com todas as peças e as casas delas (formato casa,TIPO,COR separado por ;)
 	public String getPecasTabuleiro() {
 		return tabuleiro.getPecasTabuleiro();
@@ -158,7 +168,7 @@ public class Partida {
 		return tabuleiro.getPecaNaCasa(posicao);
 	}
 
-	//diz se o movimento é permitido pelas regras da peça que está na origem (não move nada)
+	//diz se o lance é permitido: lance legal normal (formato da peça e rei fora de xeque depois dele) ou roque seguro. Não move nada
 	public boolean validaMovimento(Posicao posicaoOrigem, Posicao posicaoDestino) {
 		return validador.verificaLanceLegal(tabuleiro, posicaoOrigem, posicaoDestino) || validador.verificaRoqueSeguro(tabuleiro, posicaoOrigem, posicaoDestino);
 	}
@@ -167,27 +177,28 @@ public class Partida {
 	public boolean moverOuCapturar(Posicao posicaoOrigem, Posicao posicaoDestino) {
 		return tabuleiro.moverOuCapturar(posicaoOrigem, posicaoDestino);
 	}
-	
-	public void fimDeJogo(Resultado resultado) {
-		this.estadoDaPartida = EstadoDaPartida.CONCLUIDA;
-		this.resultado = resultado;
+
+	//diz se o lance é um roque (formato e peças). Tem que ser perguntado ANTES de mover o rei, porque depois o "já mexeu" dele muda
+	public boolean verificaRoque(Posicao posicaoOrigem, Posicao posicaoDestino) {
+		return validador.verificaRoque(tabuleiro, posicaoOrigem, posicaoDestino);
 	}
-	
-	public boolean verificaXequeMate() {
-		return validador.verificaXequeMate(tabuleiro, turno);
+
+	//move a torre do roque, depois que o rei já foi movido
+	public void moverTorreRoque(Posicao posicaoOrigemRei, Posicao posicaoDestinoRei) {
+		tabuleiro.moverTorreRoque(posicaoOrigemRei, posicaoDestinoRei);
 	}
-	
-	public boolean verificaAfogamento() {
-		return validador.verificaAfogamento(tabuleiro, turno);
-	}
-	
+
+	//diz se há um peão na casa que chegou à última linha e precisa ser promovido
 	public boolean verificaPromocao(Posicao posicaoDaPeca) {
 		return validador.verificaPromocao(tabuleiro, posicaoDaPeca);
 	}
-	
+
+	//troca o peão da casa pela peça escolhida (rainha, torre, bispo ou cavalo, sem diferenciar maiúscula). Qualquer outro texto, inclusive vazio, vira rainha
 	public void promocao(Posicao posicaoDaPeca, String pecaEscolhida) {
+		//a peça nova tem a mesma cor do peão
 		CorPecas corDaPeca = tabuleiro.getPecaNaCasa(posicaoDaPeca).getCor();
 		
+		//escolhe a peça pelo texto (sem diferenciar maiúscula nem espaços nas pontas); qualquer texto fora da lista cai no default e vira rainha
 		switch(pecaEscolhida.toLowerCase().trim()) {
 			case "rainha":
 				tabuleiro.trocarPeca(posicaoDaPeca, new Peca(TipoPeca.RAINHA, corDaPeca, true));
@@ -206,12 +217,63 @@ public class Partida {
 				break;
 		}
 	}
-	
-	public boolean verificaRoque(Posicao posicaoOrigem, Posicao posicaoDestino) {
-		return validador.verificaRoque(tabuleiro, posicaoOrigem, posicaoDestino);
+
+	//---- fim de jogo e regras de empate ----
+	//encerra a partida: o estado vira concluída e guarda como ela terminou
+	public void fimDeJogo(Resultado resultado) {
+		this.estadoDaPartida = EstadoDaPartida.CONCLUIDA;
+		this.resultado = resultado;
 	}
-	
-	public void moverTorreRoque(Posicao posicaoOrigemRei, Posicao posicaoDestinoRei) {
-		tabuleiro.moverTorreRoque(posicaoOrigemRei, posicaoDestinoRei);
+
+	//a cor da vez está em xeque-mate? (chamado depois de passar a vez)
+	public boolean verificaXequeMate() {
+		return validador.verificaXequeMate(tabuleiro, turno);
+	}
+
+	//a cor da vez está afogada? (chamado depois de passar a vez)
+	public boolean verificaAfogamento() {
+		return validador.verificaAfogamento(tabuleiro, turno);
+	}
+
+	//empate: sobraram só os reis, ou os reis e uma única peça menor
+	public boolean verificaMaterialInsuficiente() {
+		return validador.verificaMaterialInsuficiente(tabuleiro);
+	}
+
+	//regra dos 50 lances: captura ou movimento de peão zera a contagem, qualquer outra jogada soma 1
+	public void contarJogada(boolean houveCapturaOuEPeao) {
+		//captura ou movimento de peão: a contagem recomeça do zero
+		if(houveCapturaOuEPeao) {
+			this.contadorJogadas = 0;
+			return;
+		}
+		//qualquer outra jogada: soma 1
+		contadorJogadas++;
+	}
+
+	//empate: chegou a 100 jogadas (50 de cada jogador) sem captura e sem movimento de peão
+	public boolean verificaLimiteDeJogadas() {
+		return contadorJogadas >= 100;
+	}
+
+	//anota que a posição de agora apareceu mais uma vez. Chamado depois de passar a vez, porque a vez faz parte da chave
+	public void registrarRepeticao() {
+		//a chave da posição é o texto das peças mais a cor da vez (posições iguais geram a mesma chave)
+		String chave = getPecasTabuleiro() + turno;
+		
+		//quantas vezes essa posição já apareceu (0 se é a primeira)
+		int vezes = repeticoesDaMesaJogada.getOrDefault(chave, 0);
+		//grava a contagem nova
+		repeticoesDaMesaJogada.put(chave, vezes + 1);
+	}
+
+	//empate: a posição de agora já apareceu 3 vezes ou mais
+	public boolean verificaRepeticao() {
+		//a mesma chave usada no registrarRepeticao
+		String chave = getPecasTabuleiro() + turno;
+		
+		//quantas vezes essa posição já apareceu
+		int vezes = repeticoesDaMesaJogada.getOrDefault(chave, 0);
+		return vezes >= 3;
 	}
 }

@@ -43,4 +43,16 @@ public interface EstadoResponseOrBuilder extends
    */
   com.google.protobuf.ByteString
       getEstadoJogoBytes();
+
+  /**
+   * <code>string resultado = 4;</code>
+   * @return The resultado.
+   */
+  java.lang.String getResultado();
+  /**
+   * <code>string resultado = 4;</code>
+   * @return The bytes for resultado.
+   */
+  com.google.protobuf.ByteString
+      getResultadoBytes();
 }

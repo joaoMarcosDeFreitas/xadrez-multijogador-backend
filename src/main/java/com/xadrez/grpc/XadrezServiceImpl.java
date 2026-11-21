@@ -11,6 +11,7 @@ import com.xadrez.models.Posicao;
 import com.xadrez.models.ValidadorRegras;
 import com.xadrez.models.enums.CorPecaEnum.CorPecas;
 import com.xadrez.models.enums.EstadoDaPartidaEnum.EstadoDaPartida;
+import com.xadrez.models.enums.ResultadoEnum.Resultado;
 
 import io.grpc.Status;
 
@@ -85,7 +86,7 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 		
 		//3. a partida está em andamento?
 		if(!partida.getEstadoDaPartida().equals(EstadoDaPartida.EM_ANDAMENTO)) {
-			responseObserver.onError(Status.FAILED_PRECONDITION.withDescription("A partida ainda não começou.").asRuntimeException()); 
+			responseObserver.onError(Status.FAILED_PRECONDITION.withDescription("Partida não está em andamento!").asRuntimeException()); 
 			return;
 		}
 		
@@ -145,8 +146,17 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 			return;
 		}
 		
+		if(partida.verificaPromocao(posicaoDestino)) partida.promocao(posicaoDestino, request.getPromocao());
+		
 		//9. jogada feita: passa a vez e responde com sucesso
 		partida.trocarTurno();
+		
+		if(partida.verificaXequeMate()) {
+			if(partida.getTurno().equals(CorPecas.PRETAS)) partida.fimDeJogo(Resultado.XEQUE_MATE_BRANCAS);
+			else partida.fimDeJogo(Resultado.XEQUE_MATE_PRETAS);
+		} else if(partida.verificaAfogamento()) partida.fimDeJogo(Resultado.EMPATE_AFOGAMENTO);
+		
+		
 		JogadaResponse mensagem = JogadaResponse.newBuilder()
 				.setJogadaValida(true)
 				.setMensagemRetorno("Jogada feita!")
@@ -154,6 +164,8 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 		responseObserver.onNext(mensagem);
 		responseObserver.onCompleted();
 		return;	
+		
+		
 	}
 
 	//devolve o estado da partida: texto das peças, de quem é a vez e o estado (aguardando, em andamento ou concluída)
@@ -169,6 +181,7 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 				.setPosicaoPecas(partida.getPecasTabuleiro())
 				.setTurnoAtual(partida.getTurno() == null ? "NENHUM" : partida.getTurno().toString())
 				.setEstadoJogo(partida.getEstadoDaPartida().toString())
+				.setResultado(partida.getResultado() == null ? "" : partida.getResultado().toString())
 				.build();
 		responseObserver.onNext(mensagem);
 		responseObserver.onCompleted();

@@ -138,4 +138,88 @@ public class ValidadorRegras {
 		}
 		return true;
 	}
+	
+	public boolean verificaAfogamento(Tabuleiro tabuleiro, CorPecas corPeca) {
+		if(verificaXeque(tabuleiro, corPeca)) return false;
+		
+		for(int i = 0; i < 8; i++) {
+			for(int j = 0; j < 8; j++) {
+				Posicao posicaoDaPeca = new Posicao(tabuleiro.getCasa(i, j));
+				Peca peca = tabuleiro.getPecaNaCasa(posicaoDaPeca);
+				if(peca != null) {
+					if(peca.getCor().equals(corPeca)) {
+						for(int k = 0; k < 8; k++) {
+							for(int l = 0; l < 8; l++) {
+								Posicao posicaoDestino = new Posicao(tabuleiro.getCasa(k, l));
+								if(verificaLanceLegal(tabuleiro, posicaoDaPeca, posicaoDestino)) return false;
+							}
+						}
+					}
+				}
+			}
+		}
+		return true;	
+	}
+	
+	public boolean verificaPromocao(Tabuleiro tabuleiro, Posicao posicaoDaPeca) {
+		Peca peca = tabuleiro.getPecaNaCasa(posicaoDaPeca);
+		if(peca == null || !peca.getTipoPeca().equals(TipoPeca.PEAO)) return false;
+		
+		if(peca.getCor().equals(CorPecas.BRANCAS) && posicaoDaPeca.getLinha() == 7) return true;
+		
+		if(peca.getCor().equals(CorPecas.PRETAS) && posicaoDaPeca.getLinha() == 0) return true;
+		
+		return false;
+	}
+
+	public boolean verificaRoque(Tabuleiro tabuleiro, Posicao posicaoOrigem, Posicao posicaoDestino) {
+		Peca pecaMovida = tabuleiro.getPecaNaCasa(posicaoOrigem);
+		if(!pecaMovida.getTipoPeca().equals(TipoPeca.REI) || pecaMovida.getJaMexeu()) return false;
+		
+		if(posicaoOrigem.getDeslocamentoLinha(posicaoDestino) != 0) return false;
+		
+		if(posicaoOrigem.getDeslocamentoColuna(posicaoDestino) != 2 && posicaoOrigem.getDeslocamentoColuna(posicaoDestino) != -2) return false;
+
+		if(Integer.signum(posicaoOrigem.getDeslocamentoColuna(posicaoDestino)) == 1) {
+			Posicao posicaoDaTorre = new Posicao(tabuleiro.getCasa(posicaoOrigem.getLinha(), 7));
+			Peca peca = tabuleiro.getPecaNaCasa(posicaoDaTorre);
+			
+			if(peca == null) return false;
+			
+			if(!peca.getCor().equals(pecaMovida.getCor()) || !peca.getTipoPeca().equals(TipoPeca.TORRE) || peca.getJaMexeu() || !tabuleiro.verificarCasasEntreOrigemDestino(posicaoOrigem, posicaoDaTorre)) return false;
+		}else {
+			Posicao posicaoDaTorre = new Posicao(tabuleiro.getCasa(posicaoOrigem.getLinha(), 0));
+			Peca peca = tabuleiro.getPecaNaCasa(posicaoDaTorre);
+			
+			if(peca == null) return false;
+			
+			if(!peca.getCor().equals(pecaMovida.getCor()) || !peca.getTipoPeca().equals(TipoPeca.TORRE) || peca.getJaMexeu() || !tabuleiro.verificarCasasEntreOrigemDestino(posicaoOrigem, posicaoDaTorre)) return false;
+		}
+		
+		return true;
+	}
+
+	public boolean verificaRoqueSeguro(Tabuleiro tabuleiro, Posicao posicaoOrigem, Posicao posicaoDestino) {
+		Peca pecaMovida = tabuleiro.getPecaNaCasa(posicaoOrigem);
+
+		if(!verificaRoque(tabuleiro, posicaoOrigem, posicaoDestino)) return false;
+		
+		if(verificaXeque(tabuleiro, pecaMovida.getCor())) return false;
+	
+		tabuleiro.simulacaoMovimento(posicaoOrigem, new Posicao(tabuleiro.getCasa(posicaoOrigem.getLinha(), posicaoOrigem.getColuna() + Integer.signum(posicaoOrigem.getDeslocamentoColuna(posicaoDestino)))));
+		if(verificaXeque(tabuleiro, pecaMovida.getCor())) {
+			tabuleiro.desfazerMovimento();
+			return false;
+		}
+		tabuleiro.desfazerMovimento();
+		
+		tabuleiro.simulacaoMovimento(posicaoOrigem, posicaoDestino);
+		if(verificaXeque(tabuleiro, pecaMovida.getCor())) {
+			tabuleiro.desfazerMovimento();
+			return false;
+		}
+		tabuleiro.desfazerMovimento();
+		
+		return true;
+	}
 }

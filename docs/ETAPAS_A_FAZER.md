@@ -10,13 +10,12 @@ Atualizado em 2026-11-19, depois de comparar a lista com o código atual.
 
 **Decisão do João (2026-11-19): todos os testes ficam juntos na Etapa 10; nenhum teste é feito durante as etapas anteriores.**
 
-**Já concluído e removido:** Etapa 1 (pré-jogo e reconexão), testada no Postman em 2026-11-04. Etapa 2 (peças e coordenadas: texto da peça e `Posicao` com validação, texto, deslocamento e igualdade), conferida no código em 2026-11-17. Etapa 3 (tabuleiro: leitura de casa, posição inicial, caminho livre, mover/capturar, localizar o rei, texto do estado, simular/desfazer, trocar peça e ligação à `Partida`), conferida no código em 2026-11-18. Etapa 4 (`ObterEstadoDoJogo`: `NOT_FOUND` para partida inexistente, texto das peças, turno e estado), conferida no código em 2026-11-19. Etapa 6 (`EnviarJogada`: conferências de partida, jogador, estado e vez; posições; validação pelas regras, movimento, troca de turno e resposta `jogadaValida` falsa com o motivo), conferida no código em 2026-11-19. Etapa 5 (movimentos: `ValidadorRegras` com peão, torre, bispo, rainha, cavalo e rei, e `Jogada` com `Posicao` e resultado da validação), conferida no código em 2026-11-19. O item 2.1 também já tinha saído da lista original.
+**Já concluído e removido:** Etapa 1 (pré-jogo e reconexão), testada no Postman em 2026-11-04. Etapa 2 (peças e coordenadas: texto da peça e `Posicao` com validação, texto, deslocamento e igualdade), conferida no código em 2026-11-17. Etapa 3 (tabuleiro: leitura de casa, posição inicial, caminho livre, mover/capturar, localizar o rei, texto do estado, simular/desfazer, trocar peça e ligação à `Partida`), conferida no código em 2026-11-18. Etapa 4 (`ObterEstadoDoJogo`: `NOT_FOUND` para partida inexistente, texto das peças, turno e estado), conferida no código em 2026-11-19. Etapa 7 (fim de jogo: `verificaXeque`, `verificaLanceLegal` aplicado nas jogadas, `verificaXequeMate`, `verificaAfogamento`, `Resultado` no estado e no `.proto`, partida vira `CONCLUIDA`), conferida no código em 2026-11-20. Sentido do resultado: `XEQUE_MATE_BRANCAS` = as brancas venceram; `XEQUE_MATE_PRETAS` = as pretas venceram; `EMPATE_AFOGAMENTO` = empate (documentar em 11.2). Etapa 6 (`EnviarJogada`: conferências de partida, jogador, estado e vez; posições; validação pelas regras, movimento, troca de turno e resposta `jogadaValida` falsa com o motivo), conferida no código em 2026-11-19. Etapa 5 (movimentos: `ValidadorRegras` com peão, torre, bispo, rainha, cavalo e rei, e `Jogada` com `Posicao` e resultado da validação), conferida no código em 2026-11-19. O item 2.1 também já tinha saído da lista original.
 
 **Resumo**
 
 | Etapa | Assunto | Situação |
 |---|---|---|
-| 7 | Fim de jogo | Não iniciada |
 | 8 | Regras avançadas | Não iniciada |
 | 9 | Robustez | Parcial (9.1 em parte) |
 | 10 | Testes | Não iniciada |
@@ -24,20 +23,10 @@ Atualizado em 2026-11-19, depois de comparar a lista com o código atual.
 
 ---
 
-## Etapa 7 — Fim de jogo
-
-Hoje: o `ValidadorRegras.verificaXeque(tabuleiro, cor)` (privado) já devolve `true` se o rei da cor está em xeque: procura o rei e pergunta ao `validaMovimento` se alguma peça adversária consegue ir até ele (item 7.2 feito). O `verificaLanceLegal(tabuleiro, origem, destino)` (público) simula o lance, vê se o rei da cor de quem jogou ficou em xeque e sempre desfaz; a `Partida.validaMovimento` já usa esse método, então um lance que deixa o próprio rei em xeque é recusado com "Movimento inválido!" (item 7.1 feito). O `verificaXequeMate(tabuleiro, cor)` (público) devolve `true` se o rei está em xeque e nenhuma peça da cor tem lance legal para nenhuma das 64 casas (item 7.3 feito).
-
-- **7.4 Detectar afogamento** — não feito.
-- **7.5 Resultado no estado e campo novo no `.proto`** — não feito. O estado `CONCLUIDA` já existe no enum, mas nada o define. O `EstadoResponse` não tem campo de resultado.
-
----
-
 ## Etapa 8 — Regras avançadas
 
-Hoje: `Peca` já guarda "já mexeu", que o roque e o avanço duplo do peão vão usar.
+Hoje: `Peca` já guarda "já mexeu", que o roque e o avanço duplo do peão vão usar. A promoção do peão (8.1) está feita: o `JogadaRequest` tem o campo `promocao`, o `ValidadorRegras.verificaPromocao` diz se há peão na última linha, a `Partida.promocao` troca pela peça escolhida (rainha por padrão se o texto for inválido ou vazio) e o `enviarJogada` chama isso depois do movimento e antes de passar a vez.
 
-- **8.1 Promoção** — não feito. Campo novo no `JogadaRequest` para a peça escolhida (depende de 3.8).
 - **8.2 Roque** — não feito.
 - **8.3 Empate por material insuficiente** — não feito.
 - **8.4 Empate pela regra dos 50 lances** — não feito.
@@ -75,7 +64,7 @@ Hoje: as pastas `src/test/java` e `src/test/resources` existem, vazias. O `pom.x
   5. Manual de compilação e execução: como subir o servidor e rodar os clientes.
   6. Conclusão e autoavaliação: dificuldades do backend e o relato do uso de IA no frontend.
   - O rascunho do relatório está em `docs/Relatorio_Tecnico_SD_ABNT-2026.docx.pdf`; ele não foi lido para saber quais seções já estão prontas. O arquivo `instrucoes-da-1-entrega.txt` cobre só as seções 1 e 2.
-- **11.2 Documentação dos formatos de texto do `.proto`** — não feito (formato do texto das peças, das posições, do turno e do estado).
+- **11.2 Documentação dos formatos de texto do `.proto`** — não feito (formato do texto das peças, das posições, do turno, do estado e do resultado, incluindo o sentido de `XEQUE_MATE_BRANCAS` e `XEQUE_MATE_PRETAS`).
 - **11.3 Reflexão do servidor e porta configurável** — não feito. Hoje a porta (50040) está fixa no `Main`, e a reflexão gRPC não está ligada (por isso o Postman precisa importar o `.proto`).
 - **11.4 Teste em duas máquinas e simulação de desconexão** — não feito. O enunciado pede o teste em processos diferentes no localhost e entre máquinas na rede local, e a simulação de desconexão e de exceção na chamada remota.
 - **11.5 Concorrência conferida e explicada** — não feito. O enunciado dá 20% da nota a "gerenciamento de concorrência e estado" (sem inconsistências com acessos simultâneos). Hoje os métodos do serviço são `synchronized`. Falta conferir que isso cobre também a leitura do estado (Etapa 4) e a jogada (Etapa 6), e anotar a explicação para o relatório (seção 4) e para a defesa.
@@ -92,7 +81,7 @@ Combinado com o João: remover redundâncias e limpar o código só no fim. Anot
 - `Tabuleiro.getCasa(linha, coluna)` e `Posicao.getCasa()` repetem a mesma conta.
 - `Posicao.hashCode`: os `Integer.valueOf` são desnecessários.
 - `Partida.verificaSeJogoEstaCheio`: `? true : false` é redundante.
-- Os quatro laços "para cada peça da cor, para cada casa de destino, existe lance legal?" do `verificaXequeMate` (e do afogamento, 7.4) são os mesmos: dá para virar um método só.
+- Os quatro laços "para cada peça da cor, para cada casa de destino, existe lance legal?" do `verificaXequeMate` (e do `verificaAfogamento`) são os mesmos: dá para virar um método só.
 - Comentários desatualizados (por exemplo, no `Jogada`) e os que o João pediu para refazer.
 - Mensagem "A partida ainda não começou." no `EnviarJogada` vale também para partida concluída (ajustar na Etapa 7).
 

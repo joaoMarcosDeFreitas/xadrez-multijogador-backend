@@ -6,6 +6,8 @@ import java.util.Map;
 
 import com.xadrez.models.enums.CorPecaEnum.CorPecas;
 import com.xadrez.models.enums.EstadoDaPartidaEnum.EstadoDaPartida;
+import com.xadrez.models.enums.PecaEnum.TipoPeca;
+import com.xadrez.models.enums.ResultadoEnum.Resultado;
 
 //uma partida de xadrez: guarda os jogadores (por cor), o estado, de quem é a vez e o tabuleiro. É o ponto de entrada do serviço: o tabuleiro e o validador ficam escondidos aqui dentro
 public class Partida {
@@ -22,6 +24,7 @@ public class Partida {
     private final Tabuleiro tabuleiro;
     //confere se o movimento de uma peça é permitido pelas regras dela
     private final ValidadorRegras validador;
+    private Resultado resultado;
 
 	//---- construtor ----
 	//a partida nasce aguardando jogadores, com o tabuleiro vazio
@@ -41,6 +44,10 @@ public class Partida {
 	//estado atual da partida
 	public EstadoDaPartida getEstadoDaPartida() {
 		return estadoDaPartida;
+	}
+	
+	public Resultado getResultado() {
+		return resultado;
 	}
 
 	//cor da vez (null enquanto a partida não começou)
@@ -153,11 +160,54 @@ public class Partida {
 
 	//diz se o movimento é permitido pelas regras da peça que está na origem (não move nada)
 	public boolean validaMovimento(Posicao posicaoOrigem, Posicao posicaoDestino) {
-		return validador.verificaLanceLegal(tabuleiro, posicaoOrigem, posicaoDestino);
+		return validador.verificaLanceLegal(tabuleiro, posicaoOrigem, posicaoDestino) || validador.verificaRoqueSeguro(tabuleiro, posicaoOrigem, posicaoDestino);
 	}
 
 	//faz o movimento no tabuleiro. Devolve false se for recusado (origem vazia ou destino com peça da mesma cor)
 	public boolean moverOuCapturar(Posicao posicaoOrigem, Posicao posicaoDestino) {
 		return tabuleiro.moverOuCapturar(posicaoOrigem, posicaoDestino);
+	}
+	
+	public void fimDeJogo(Resultado resultado) {
+		this.estadoDaPartida = EstadoDaPartida.CONCLUIDA;
+		this.resultado = resultado;
+	}
+	
+	public boolean verificaXequeMate() {
+		return validador.verificaXequeMate(tabuleiro, turno);
+	}
+	
+	public boolean verificaAfogamento() {
+		return validador.verificaAfogamento(tabuleiro, turno);
+	}
+	
+	public boolean verificaPromocao(Posicao posicaoDaPeca) {
+		return validador.verificaPromocao(tabuleiro, posicaoDaPeca);
+	}
+	
+	public void promocao(Posicao posicaoDaPeca, String pecaEscolhida) {
+		CorPecas corDaPeca = tabuleiro.getPecaNaCasa(posicaoDaPeca).getCor();
+		
+		switch(pecaEscolhida.toLowerCase().trim()) {
+			case "rainha":
+				tabuleiro.trocarPeca(posicaoDaPeca, new Peca(TipoPeca.RAINHA, corDaPeca, true));
+				break;
+			case "torre":
+				tabuleiro.trocarPeca(posicaoDaPeca, new Peca(TipoPeca.TORRE, corDaPeca, true));
+				break;
+			case "bispo":
+				tabuleiro.trocarPeca(posicaoDaPeca, new Peca(TipoPeca.BISPO, corDaPeca, true));
+				break;
+			case "cavalo":
+				tabuleiro.trocarPeca(posicaoDaPeca, new Peca(TipoPeca.CAVALO, corDaPeca, true));
+				break;
+			default:
+				tabuleiro.trocarPeca(posicaoDaPeca, new Peca(TipoPeca.RAINHA, corDaPeca, true));
+				break;
+		}
+	}
+	
+	public boolean verificaRoque(Posicao posicaoOrigem, Posicao posicaoDestino) {
+		return validador.verificaRoque(tabuleiro, posicaoOrigem, posicaoDestino);
 	}
 }

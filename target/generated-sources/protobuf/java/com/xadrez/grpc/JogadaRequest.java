@@ -21,6 +21,7 @@ private static final long serialVersionUID = 0L;
     idPartida_ = "";
     posicaoOrigem_ = "";
     posicaoDestino_ = "";
+    promocao_ = "";
   }
 
   @java.lang.Override
@@ -199,6 +200,45 @@ private static final long serialVersionUID = 0L;
     }
   }
 
+  public static final int PROMOCAO_FIELD_NUMBER = 5;
+  @SuppressWarnings("serial")
+  private volatile java.lang.Object promocao_ = "";
+  /**
+   * <code>string promocao = 5;</code>
+   * @return The promocao.
+   */
+  @java.lang.Override
+  public java.lang.String getPromocao() {
+    java.lang.Object ref = promocao_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      promocao_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string promocao = 5;</code>
+   * @return The bytes for promocao.
+   */
+  @java.lang.Override
+  public com.google.protobuf.ByteString
+      getPromocaoBytes() {
+    java.lang.Object ref = promocao_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      promocao_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -225,6 +265,9 @@ private static final long serialVersionUID = 0L;
     if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(posicaoDestino_)) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 4, posicaoDestino_);
     }
+    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(promocao_)) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 5, promocao_);
+    }
     getUnknownFields().writeTo(output);
   }
 
@@ -245,6 +288,9 @@ private static final long serialVersionUID = 0L;
     }
     if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(posicaoDestino_)) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, posicaoDestino_);
+    }
+    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(promocao_)) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, promocao_);
     }
     size += getUnknownFields().getSerializedSize();
     memoizedSize = size;
@@ -269,6 +315,8 @@ private static final long serialVersionUID = 0L;
         .equals(other.getPosicaoOrigem())) return false;
     if (!getPosicaoDestino()
         .equals(other.getPosicaoDestino())) return false;
+    if (!getPromocao()
+        .equals(other.getPromocao())) return false;
     if (!getUnknownFields().equals(other.getUnknownFields())) return false;
     return true;
   }
@@ -288,6 +336,8 @@ private static final long serialVersionUID = 0L;
     hash = (53 * hash) + getPosicaoOrigem().hashCode();
     hash = (37 * hash) + POSICAODESTINO_FIELD_NUMBER;
     hash = (53 * hash) + getPosicaoDestino().hashCode();
+    hash = (37 * hash) + PROMOCAO_FIELD_NUMBER;
+    hash = (53 * hash) + getPromocao().hashCode();
     hash = (29 * hash) + getUnknownFields().hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -423,6 +473,7 @@ private static final long serialVersionUID = 0L;
       idPartida_ = "";
       posicaoOrigem_ = "";
       posicaoDestino_ = "";
+      promocao_ = "";
       return this;
     }
 
@@ -467,6 +518,9 @@ private static final long serialVersionUID = 0L;
       }
       if (((from_bitField0_ & 0x00000008) != 0)) {
         result.posicaoDestino_ = posicaoDestino_;
+      }
+      if (((from_bitField0_ & 0x00000010) != 0)) {
+        result.promocao_ = promocao_;
       }
     }
 
@@ -534,6 +588,11 @@ private static final long serialVersionUID = 0L;
         bitField0_ |= 0x00000008;
         onChanged();
       }
+      if (!other.getPromocao().isEmpty()) {
+        promocao_ = other.promocao_;
+        bitField0_ |= 0x00000010;
+        onChanged();
+      }
       this.mergeUnknownFields(other.getUnknownFields());
       onChanged();
       return this;
@@ -580,6 +639,11 @@ private static final long serialVersionUID = 0L;
               bitField0_ |= 0x00000008;
               break;
             } // case 34
+            case 42: {
+              promocao_ = input.readStringRequireUtf8();
+              bitField0_ |= 0x00000010;
+              break;
+            } // case 42
             default: {
               if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                 done = true; // was an endgroup tag
@@ -881,6 +945,78 @@ private static final long serialVersionUID = 0L;
       checkByteStringIsUtf8(value);
       posicaoDestino_ = value;
       bitField0_ |= 0x00000008;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object promocao_ = "";
+    /**
+     * <code>string promocao = 5;</code>
+     * @return The promocao.
+     */
+    public java.lang.String getPromocao() {
+      java.lang.Object ref = promocao_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        promocao_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string promocao = 5;</code>
+     * @return The bytes for promocao.
+     */
+    public com.google.protobuf.ByteString
+        getPromocaoBytes() {
+      java.lang.Object ref = promocao_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        promocao_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string promocao = 5;</code>
+     * @param value The promocao to set.
+     * @return This builder for chaining.
+     */
+    public Builder setPromocao(
+        java.lang.String value) {
+      if (value == null) { throw new NullPointerException(); }
+      promocao_ = value;
+      bitField0_ |= 0x00000010;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string promocao = 5;</code>
+     * @return This builder for chaining.
+     */
+    public Builder clearPromocao() {
+      promocao_ = getDefaultInstance().getPromocao();
+      bitField0_ = (bitField0_ & ~0x00000010);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string promocao = 5;</code>
+     * @param value The bytes for promocao to set.
+     * @return This builder for chaining.
+     */
+    public Builder setPromocaoBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) { throw new NullPointerException(); }
+      checkByteStringIsUtf8(value);
+      promocao_ = value;
+      bitField0_ |= 0x00000010;
       onChanged();
       return this;
     }

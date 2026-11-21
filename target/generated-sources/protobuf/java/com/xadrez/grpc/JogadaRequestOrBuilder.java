@@ -55,4 +55,16 @@ public interface JogadaRequestOrBuilder extends
    */
   com.google.protobuf.ByteString
       getPosicaoDestinoBytes();
+
+  /**
+   * <code>string promocao = 5;</code>
+   * @return The promocao.
+   */
+  java.lang.String getPromocao();
+  /**
+   * <code>string promocao = 5;</code>
+   * @return The bytes for promocao.
+   */
+  com.google.protobuf.ByteString
+      getPromocaoBytes();
 }

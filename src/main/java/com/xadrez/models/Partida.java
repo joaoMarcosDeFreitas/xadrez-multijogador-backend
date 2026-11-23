@@ -256,9 +256,13 @@ public class Partida {
 		return contadorJogadas >= 100;
 	}
 
+	//chave da posição de agora: o texto das peças mais a cor da vez (posições iguais geram a mesma chave). A vez faz parte porque a mesma posição com outra cor jogando é uma posição diferente
+	private String chaveDaPosicao() {
+		return getPecasTabuleiro() + turno;
+	}
+
 	//anota que a posição de agora apareceu mais uma vez. Chamado depois de passar a vez, porque a vez faz parte da chave
 	public void registrarRepeticao() {
-		//a chave da posição é o texto das peças mais a cor da vez (posições iguais geram a mesma chave)
 		String chave = chaveDaPosicao();
 		
 		//quantas vezes essa posição já apareceu (0 se é a primeira)
@@ -269,15 +273,10 @@ public class Partida {
 
 	//empate: a posição de agora já apareceu 3 vezes ou mais
 	public boolean verificaRepeticao() {
-		//a mesma chave usada no registrarRepeticao
 		String chave = chaveDaPosicao();
 		
 		//quantas vezes essa posição já apareceu
 		int vezes = repeticoesDaMesaJogada.getOrDefault(chave, 0);
 		return vezes >= 3;
-	}
-	
-	private String chaveDaPosicao() {
-		return getPecasTabuleiro() + turno;
 	}
 }

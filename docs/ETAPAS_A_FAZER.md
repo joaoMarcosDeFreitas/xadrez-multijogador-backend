@@ -24,27 +24,23 @@ Nada de funcionalidade nova. Só limpeza de código, clareza de redundâncias e 
 - [ ] **O João testa a rede na faculdade hoje (2026-11-23); fora do trabalho do Claude.** Montagem: o notebook do João é o servidor (Java + Envoy/Docker) e os PCs da faculdade são os clientes (só o front, com o endereço `http://IP-DO-NOTEBOOK:8080` na tela de entrada); plano de segurança: duas abas em `localhost` no notebook + vídeo gravado. Ponto aberto: se o Wi-Fi e o cabo da faculdade são a mesma rede. Jogar em duas máquinas/redes diferentes funciona? O servidor escuta em todas as interfaces (porta 50040, ou a do argumento), mas a internet exige liberar a porta no roteador/firewall ou usar um túnel; o front passa pelo Envoy (porta 8080). Decidir como será na apresentação (mesma rede local ou túnel) e testar uma vez.
 - [ ] Os três métodos do enunciado (`ConectarJogador`, `EnviarJogada`, `ObterEstadoDoJogo`), concorrência com `synchronized` e reconexão estão cobertos (conferido no código em 2026-11-23).
 
-### B. Comentários (feito em 2026-11-23)
-Revisados todos os arquivos do backend. Corrigidos só comentários, sem tocar em código: `CONCLUIDA` dizia "ainda não é usado"; `Peca.jaMexeu` dizia "no futuro, para o roque"; explicação do `verificaRoque` (o `verificaXeque` usa o `validaMovimento`, não o `movimentoRei` direto); `catch` do serviço com o comentário dentro do bloco; "os três métodos" no cabeçalho do serviço; comentário da conferência da partida no `obterEstadoDoJogo`.
-- Fica de fora, porque é código e não comentário: o texto "Nome inválido... carácteres" (acento de "caracteres") dentro da mensagem de erro do serviço.
+### B. Comentários e ordem dos métodos (revisados em 2026-11-23, no fim da limpeza)
+Todos os arquivos do backend foram relidos: comentários desatualizados corrigidos, comentários dos métodos novos escritos e a ordem dos métodos conferida. Só comentário e ordem, sem mudar lógica.
+- Fica de fora, porque é código e não comentário: o texto "carácteres" (sem acento em "caracteres") dentro da mensagem de nome inválido do serviço.
 
-### C. Limpeza do código (o João faz, o Claude confere depois; jogar uma partida depois de cada item)
-Do mais seguro ao que mexe mais:
-1. `Utils` (e a dependência do Gson no `pom.xml`) não é mais usado em nenhum lugar: apagar os dois.
-2. `Partida.verificaSeJogoEstaCheio`: `? true : false` é redundante (e o retorno pode ser `boolean`).
-3. `Tabuleiro.desfazerMovimento`: `pecaCapturadaMomento != null ? pecaCapturadaMomento : null` equivale a só `pecaCapturadaMomento`.
-4. `Posicao.hashCode`: os `Integer.valueOf` são desnecessários.
-5. `Tabuleiro.getCasa(linha, coluna)` e `Posicao.getCasa()` repetem a mesma conta.
-6. `Jogador.verificaNome`, `Partida.verificaSeJogoEstaCheio` e `Partida.verificaReconexao` devolvem `Boolean` (objeto); podem ser `boolean`, como os outros. (Não mexer no `Boolean jaMexeuMomento` do `Tabuleiro`: lá o `null` significa "não há simulação".)
-7. `Partida.registrarRepeticao` e `verificaRepeticao` montam a mesma chave (peças + turno): um método só para a chave.
-8. `ValidadorRegras.movimentoPeao`: a mesma conta de deslocamento é feita várias vezes; guardar em variáveis locais.
-9. `ValidadorRegras.movimentoBispo` e `movimentoTorre`: condições repetidas e checagens que se sobrepõem (`!= 0` junto com valor absoluto igual; origem diferente do destino que a `Jogada` já garante).
-10. `ValidadorRegras.verificaXequeMate` e `verificaAfogamento`: os laços "para cada peça da cor, para cada casa de destino, existe lance legal?" são os mesmos: virar um método só.
-11. `XadrezServiceImpl.enviarJogada`: o bloco que monta e envia a jogada recusada se repete 4 vezes, e o `catch` com `INTERNAL` se repete nos três métodos: métodos de apoio.
-12. `Jogada`: a classe não é usada pelo serviço (ele valida e responde direto). Decidir se fica ou sai.
-
-### C-final. Comentários e ordem dos métodos (o Claude faz, só depois de terminar o C)
-Combinado em 2026-11-23: durante a limpeza o João mexe **só no código** (sem escrever comentário e sem mudar a posição de método). Ao terminar o C, o Claude: escreve/ajusta os comentários do que foi alterado (métodos novos, como a chave da posição, e os que ficaram sem sentido), coloca cada método novo no lugar certo da seção e reconfere a ordem dos métodos em todos os arquivos. Só comentário e ordem, sem mudar lógica.
+### C. Limpeza do código (feita em 2026-11-23, testada jogando: mate, afogamento, roque, peões e lances recusados)
+1. `Utils` e a dependência do Gson: apagados.
+2. `Partida.verificaSeJogoEstaCheio`: sem `? true : false`, retorna `boolean`.
+3. `Tabuleiro.desfazerMovimento`: sem o ternário inútil.
+4. `Posicao.hashCode`: sem `Integer.valueOf`.
+5. `Posicao.getCasa()` removido (o `Tabuleiro.getCasa(linha, coluna)` é o único); `movimentoTorre` usa `equals`.
+6. `Jogador.verificaNome`, `Partida.verificaSeJogoEstaCheio` e `Partida.verificaReconexao` devolvem `boolean`. (O `Boolean jaMexeuMomento` do `Tabuleiro` fica: lá o `null` significa "não há simulação".)
+7. `Partida.chaveDaPosicao()`: a chave da repetição num método só.
+8. `movimentoPeao`, `movimentoTorre`, `movimentoBispo`, `movimentoCavalo`, `movimentoRei` e `verificaRoque`: deslocamentos calculados uma vez, em variáveis locais.
+9. Torre e bispo: mantidos. A checagem "origem diferente do destino" precisa ficar, porque o mate e o afogamento testam todas as casas, inclusive a da própria peça (a classe `Jogada` não participa disso: o serviço não a usa).
+10. `ValidadorRegras.temLanceLegal`: o laço "alguma peça da cor tem lance legal?" num método só, usado pelo mate e pelo afogamento.
+11. `XadrezServiceImpl`: `responderJogadaRecusada` (4 usos) e `responderErro` (substituiu os `onError` espalhados, os três `INTERNAL` e o antigo `responderServidorErroConectarJogador` com os códigos de texto "3" e "9"; o sucesso da conexão continua no `responderServidorSucessoConectarJogador`). Testado jogando depois do refactor: lances recusados, erro "Não é sua vez", roque, mate do louco (`XEQUE_MATE_PRETAS`) e jogada depois do fim (`FAILED_PRECONDITION`). **Backend fechado em 2026-11-23.**
+12. Classe `Jogada` removida (o serviço nunca a usou; saiu também o `import` dela no serviço). Compila.
 
 ### D. Revisitar o front (depois do backend 100%)
 - Conferir se está pronto para a apresentação: rodar servidor + Envoy + `npm start` e jogar uma partida inteira em duas abas (mate, empate, promoção, roque, reconexão).

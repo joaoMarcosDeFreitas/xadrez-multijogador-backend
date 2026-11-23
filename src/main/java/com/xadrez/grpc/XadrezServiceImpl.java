@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 
-import com.xadrez.models.Jogada;
 import com.xadrez.models.Jogador;
 import com.xadrez.models.Partida;
 import com.xadrez.models.Peca;
@@ -44,15 +43,14 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 				//jogador novo: confere se o nome é válido (3 a 15 caracteres e único)
 				if(!jogador.verificaNome(partida.listaJogadores())) {
 					//responde com erro
-					responderServidorErroConectarJogador(responseObserver, "3", 
-	"Nome inválido, insira um nome válido e tente novamente. Nome deve ser maior ou igual a 3 carácteres, menor ou igual a 15 carácteres, não pode estar vazio e deve ser único.");
+					responderErro(responseObserver, Status.INVALID_ARGUMENT, "Nome inválido, insira um nome válido e tente novamente. Nome deve ser maior ou igual a 3 carácteres, menor ou igual a 15 carácteres, não pode estar vazio e deve ser único.");
 					return;
 				}
 				
 				//confere se ainda há vaga na partida
 				if(partida.verificaSeJogoEstaCheio()) {
 					//responde com erro
-					responderServidorErroConectarJogador(responseObserver, "9", "Jogo está cheio! Tente novamente mais tarde");
+					responderErro(responseObserver, Status.FAILED_PRECONDITION, "Jogo está cheio! Tente novamente mais tarde");
 					return;
 				}
 				
@@ -70,7 +68,7 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 			}
 		} catch(Exception exception) {
 			//qualquer erro inesperado vira INTERNAL (erro do servidor)
-			responseObserver.onError(Status.INTERNAL.withDescription("Erro interno do servidor!").asRuntimeException());
+			responderErro(responseObserver, Status.INTERNAL, "Erro interno do servidor!");
 		}
 	}
 
@@ -81,26 +79,26 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 		try {
 			//1. a partida informada existe?
 			if(!partida.getIdPartida().equals(request.getIdPartida())) {
-				responseObserver.onError(Status.NOT_FOUND.withDescription("ID da partida enviado não corresponde com o ID da partida registrado").asRuntimeException()); 
+				responderErro(responseObserver, Status.NOT_FOUND, "ID da partida enviado não corresponde com o ID da partida registrado");
 				return;
 			}
 			
 			//2. o jogador pertence à partida? (guarda a cor dele para as conferências seguintes)
 			CorPecas corJogador = partida.getCorJogadorPeloId(request.getIdJogador());					
 			if(corJogador == null) {
-				responseObserver.onError(Status.PERMISSION_DENIED.withDescription("Jogador não encontrado!").asRuntimeException()); 
+				responderErro(responseObserver, Status.PERMISSION_DENIED, "Jogador não encontrado!");
 				return;
 			}
 			
 			//3. a partida está em andamento?
 			if(!partida.getEstadoDaPartida().equals(EstadoDaPartida.EM_ANDAMENTO)) {
-				responseObserver.onError(Status.FAILED_PRECONDITION.withDescription("Partida não está em andamento!").asRuntimeException()); 
+				responderErro(responseObserver, Status.FAILED_PRECONDITION, "Partida não está em andamento!");
 				return;
 			}
 			
 			//4. é a vez desse jogador?
 			if(!partida.getTurno().equals(corJogador)) {
-				responseObserver.onError(Status.FAILED_PRECONDITION.withDescription("Não é sua vez").asRuntimeException()); 
+				responderErro(responseObserver, Status.FAILED_PRECONDITION, "Não é sua vez");
 				return;
 			}
 			
@@ -112,34 +110,19 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 				posicaoOrigem = new Posicao(request.getPosicaoOrigem());
 				posicaoDestino = new Posicao(request.getPosicaoDestino());
 			} catch (IllegalArgumentException exception) {
-				JogadaResponse mensagem = JogadaResponse.newBuilder()
-						.setJogadaValida(false)
-						.setMensagemRetorno(exception.getMessage())
-						.build();
-				responseObserver.onNext(mensagem);
-				responseObserver.onCompleted();
+				responderJogadaRecusada(responseObserver, exception.getMessage());
 				return;
 			}
 			
 			//6. existe peça na origem e ela é da cor do jogador?
 			if(partida.getPecaNaCasa(posicaoOrigem) == null || !partida.getPecaNaCasa(posicaoOrigem).getCor().equals(corJogador)) {
-				JogadaResponse mensagem = JogadaResponse.newBuilder()
-						.setJogadaValida(false)
-						.setMensagemRetorno("A cor da peça para mover deve ser a mesma cor do jogador!")
-						.build();
-				responseObserver.onNext(mensagem);
-				responseObserver.onCompleted();
+				responderJogadaRecusada(responseObserver, "A cor da peça para mover deve ser a mesma cor do jogador!");
 				return;
 			}
 			
 			//7. o lance é permitido? (formato da peça, rei sem xeque depois dele, ou roque seguro)
 			if(!partida.validaMovimento(posicaoOrigem, posicaoDestino)) {
-				JogadaResponse mensagem = JogadaResponse.newBuilder()
-						.setJogadaValida(false)
-						.setMensagemRetorno("Movimento inválido!")
-						.build();
-				responseObserver.onNext(mensagem);
-				responseObserver.onCompleted();
+				responderJogadaRecusada(responseObserver, "Movimento inválido!");
 				return;
 			}
 			
@@ -156,12 +139,7 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 			
 			//8. faz o movimento (o tabuleiro ainda recusa destino com peça da mesma cor)
 			if(!partida.moverOuCapturar(posicaoOrigem, posicaoDestino)) {
-				JogadaResponse mensagem = JogadaResponse.newBuilder()
-						.setJogadaValida(false)
-						.setMensagemRetorno("Não pode mover uma peça para uma casa que já tenha uma peça da mesma cor!")
-						.build();
-				responseObserver.onNext(mensagem);
-				responseObserver.onCompleted();
+				responderJogadaRecusada(responseObserver, "Não pode mover uma peça para uma casa que já tenha uma peça da mesma cor!");
 				return;
 			}
 			
@@ -190,6 +168,7 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 			else if(partida.verificaLimiteDeJogadas()) partida.fimDeJogo(Resultado.EMPATE_50_LANCES);
 			else if(partida.verificaRepeticao()) partida.fimDeJogo(Resultado.EMPATE_REPETICAO);
 			
+			//jogada aceita (se ela encerrou a partida, os clientes descobrem pelo obterEstadoDoJogo)
 			JogadaResponse mensagem = JogadaResponse.newBuilder()
 					.setJogadaValida(true)
 					.setMensagemRetorno("Jogada feita!")
@@ -199,7 +178,7 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 			return;	
 		} catch (Exception exception) {
 			//qualquer erro inesperado vira INTERNAL (erro do servidor)
-			responseObserver.onError(Status.INTERNAL.withDescription("Erro interno do servidor!").asRuntimeException());
+			responderErro(responseObserver, Status.INTERNAL, "Erro interno do servidor!");
 			return;
 		}
 	}
@@ -210,7 +189,7 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 		try {
 			//a partida informada existe?
 			if(!partida.getIdPartida().equals(request.getIdPartida())) {
-				responseObserver.onError(Status.NOT_FOUND.withDescription("ID da partida enviado não corresponde com o ID da partida registrado").asRuntimeException()); 
+				responderErro(responseObserver, Status.NOT_FOUND, "ID da partida enviado não corresponde com o ID da partida registrado");
 				return;
 			}
 			
@@ -225,35 +204,28 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 			responseObserver.onCompleted();
 		} catch(Exception exception) {
 			//qualquer erro inesperado vira INTERNAL (erro do servidor)
-			responseObserver.onError(Status.INTERNAL.withDescription("Erro interno do servidor!").asRuntimeException());
+			responderErro(responseObserver, Status.INTERNAL, "Erro interno do servidor!");
 			return;
 		}
 	}
 
-	//---- métodos de apoio (resposta da conexão de jogadores) ----
-	//responde com erro gRPC. Código "9" (sala cheia) vira FAILED_PRECONDITION, "3" (nome inválido) vira INVALID_ARGUMENT e qualquer outro vira UNKNOWN
-	public void responderServidorErroConectarJogador(io.grpc.stub.StreamObserver<?> responseObserver, String codigo, String descricao) {
-		//erro que será enviado ao cliente
-		Throwable excecao;
-		//escolhe o status gRPC conforme o código
-		switch(codigo) {
-			case "9":
-				//sala cheia
-				excecao = Status.FAILED_PRECONDITION.withDescription(descricao).asRuntimeException(); 
-				break;
-			case "3":
-				//nome inválido
-				excecao = Status.INVALID_ARGUMENT.withDescription(descricao).asRuntimeException(); 
-				break;
-			default:
-				//qualquer outro código
-				excecao = Status.UNKNOWN.withDescription(descricao).asRuntimeException(); 
-		}
-		//envia o erro e encerra a chamada
-		responseObserver.onError(excecao);
+	//---- métodos de apoio (respostas padronizadas) ----
+	//responde com erro gRPC (o cliente recebe o status e a descrição) e encerra a chamada. Serve para qualquer método do serviço
+	private void responderErro(io.grpc.stub.StreamObserver<?> responseObserver, Status status, String descricao) {
+		responseObserver.onError(status.withDescription(descricao).asRuntimeException());
 	}
 
-	//responde com sucesso: devolve o id, a partida, o nome e a cor do jogador
+	//responde que a jogada foi recusada: não é erro gRPC, é uma resposta normal com jogadaValida falso e o motivo
+	private void responderJogadaRecusada(io.grpc.stub.StreamObserver<com.xadrez.grpc.JogadaResponse> responseObserver, String motivo) {
+		JogadaResponse mensagem = JogadaResponse.newBuilder()
+				.setJogadaValida(false)
+				.setMensagemRetorno(motivo)
+				.build();
+		responseObserver.onNext(mensagem);
+		responseObserver.onCompleted();
+	}
+
+	//responde com sucesso à conexão (ou reconexão): devolve o id, a partida, o nome e a cor do jogador
 	public void responderServidorSucessoConectarJogador(io.grpc.stub.StreamObserver<com.xadrez.grpc.ConectarResponse> responseObserver, Jogador jogador, CorPecas corPecaEscolhida) {
 		//monta a resposta
 		ConectarResponse mensagem = ConectarResponse.newBuilder()

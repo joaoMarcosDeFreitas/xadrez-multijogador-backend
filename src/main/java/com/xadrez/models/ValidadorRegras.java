@@ -58,7 +58,7 @@ public class ValidadorRegras {
 		//sem xeque não é mate
 		if(!verificaXeque(tabuleiro, corDoRei)) return false;
 		
-		//percorre as 64 casas procurando as peças da cor
+		//em xeque e sem nenhum lance legal: é mate
 		return !temLanceLegal(tabuleiro, corDoRei);
 	}
 
@@ -67,7 +67,7 @@ public class ValidadorRegras {
 		//com xeque não é afogamento (seria xeque-mate)
 		if(verificaXeque(tabuleiro, corPeca)) return false;
 		
-		//percorre as 64 casas procurando as peças da cor
+		//fora de xeque e sem nenhum lance legal: é afogamento
 		return !temLanceLegal(tabuleiro, corPeca);	
 	}
 
@@ -111,6 +111,7 @@ public class ValidadorRegras {
 	//diz se o movimento tem o formato do roque e as peças estão em condição: rei e torre sem ter se movido, rei andando duas colunas na mesma linha e o caminho do rei até a torre livre
 	//não confere xeque (ver verificaRoqueSeguro). Fica separado do movimentoRei de propósito: o verificaXeque usa o validaMovimento (que chama o movimentoRei), e um rei a duas casas não ataca
 	public boolean verificaRoque(Tabuleiro tabuleiro, Posicao posicaoOrigem, Posicao posicaoDestino) {
+		//deslocamento em colunas até o destino (com sinal), calculado uma vez só
 		int deslocamentoColuna = posicaoOrigem.getDeslocamentoColuna(posicaoDestino);
 		Peca pecaMovida = tabuleiro.getPecaNaCasa(posicaoOrigem);
 		//tem que ser um rei que ainda não se moveu
@@ -173,10 +174,11 @@ public class ValidadorRegras {
 		return true;
 	}
 
-	//---- apoio (usados só aqui dentro): a regra de cada peça e o teste de xeque ----
+	//---- apoio (usados só aqui dentro): a regra de cada peça, o teste de xeque e a busca de lance legal ----
 	//peão: anda reto (1 casa, ou 2 na primeira jogada) só para casa vazia; captura 1 casa na diagonal para a frente, só se houver peça no destino. As brancas sobem (linha +) e as pretas descem (linha -)
 	private boolean movimentoPeao(Tabuleiro tabuleiro, Posicao posicaoOrigem, Posicao posicaoDestino) {
 		Peca peca = tabuleiro.getPecaNaCasa(posicaoOrigem);
+		//deslocamentos até o destino (com sinal: o sentido importa para o peão) e se o destino está vazio, calculados uma vez só
 		int deslocamentoLinha = posicaoOrigem.getDeslocamentoLinha(posicaoDestino);
 		int deslocamentoColuna = posicaoOrigem.getDeslocamentoColuna(posicaoDestino);
 		boolean destinoVazio = tabuleiro.getPecaNaCasa(posicaoDestino) == null;
@@ -204,9 +206,10 @@ public class ValidadorRegras {
 
 	//torre: anda em linha reta (só a linha ou só a coluna muda), para outra casa, com o caminho livre
 	private boolean movimentoTorre(Tabuleiro tabuleiro, Posicao posicaoOrigem, Posicao posicaoDestino) {
+		//deslocamentos até o destino, calculados uma vez só
 		int deslocamentoLinha = posicaoOrigem.getDeslocamentoLinha(posicaoDestino);
 		int deslocamentoColuna = posicaoOrigem.getDeslocamentoColuna(posicaoDestino);
-		//reta: um dos deslocamentos é 0, e a origem não pode ser igual ao destino; depois confere o caminho
+		//reta: um dos deslocamentos é 0. A origem não pode ser igual ao destino (o mate e o afogamento testam todas as casas, inclusive a da própria peça); depois confere o caminho
 		if((deslocamentoLinha == 0 || deslocamentoColuna == 0) && !posicaoOrigem.equals(posicaoDestino)) 
 			if(tabuleiro.verificarCasasEntreOrigemDestino(posicaoOrigem, posicaoDestino)) return true;
 		
@@ -215,6 +218,7 @@ public class ValidadorRegras {
 
 	//bispo: anda na diagonal (os dois deslocamentos têm o mesmo tamanho e nenhum é 0), com o caminho livre
 	private boolean movimentoBispo(Tabuleiro tabuleiro, Posicao posicaoOrigem, Posicao posicaoDestino) {
+		//deslocamentos até o destino, calculados uma vez só
 		int deslocamentoLinha = posicaoOrigem.getDeslocamentoLinha(posicaoDestino);
 		int deslocamentoColuna = posicaoOrigem.getDeslocamentoColuna(posicaoDestino);
 		//diagonal: os dois deslocamentos diferentes de 0 e com o mesmo tamanho (valor absoluto); depois confere o caminho
@@ -226,6 +230,7 @@ public class ValidadorRegras {
 
 	//cavalo: anda em L (um deslocamento de 2 casas e o outro de 1) e pula as peças do meio, por isso não confere o caminho (o parâmetro tabuleiro não é usado aqui)
 	private boolean movimentoCavalo(Tabuleiro tabuleiro, Posicao posicaoOrigem, Posicao posicaoDestino) {
+		//tamanho do deslocamento em linhas e em colunas (sem o sinal), calculado uma vez só
 		int linhas = Math.abs(posicaoOrigem.getDeslocamentoLinha(posicaoDestino));
 		int colunas = Math.abs(posicaoOrigem.getDeslocamentoColuna(posicaoDestino));
 		//L: (1 linha e 2 colunas) ou (2 linhas e 1 coluna), em valor absoluto
@@ -236,6 +241,7 @@ public class ValidadorRegras {
 
 	//rei: anda uma casa em qualquer direção (reta ou diagonal). O roque tem regra própria (verificaRoque). O parâmetro tabuleiro não é usado aqui
 	private boolean movimentoRei(Tabuleiro tabuleiro, Posicao posicaoOrigem, Posicao posicaoDestino) {
+		//tamanho do deslocamento em linhas e em colunas (sem o sinal), calculado uma vez só
 		int linhas = Math.abs(posicaoOrigem.getDeslocamentoLinha(posicaoDestino));
 		int colunas = Math.abs(posicaoOrigem.getDeslocamentoColuna(posicaoDestino));
 		//uma casa: (1 linha e 0 colunas), (1 e 1) ou (0 e 1), em valor absoluto
@@ -266,6 +272,7 @@ public class ValidadorRegras {
 		return false;
 	}
 	
+	//diz se alguma peça da cor tem pelo menos um lance legal (usado pelo xeque-mate e pelo afogamento). Testa cada peça da cor contra as 64 casas de destino, inclusive a casa dela mesma
 	private boolean temLanceLegal(Tabuleiro tabuleiro, CorPecas cor) {
 		//percorre as 64 casas procurando as peças da cor
 		for(int i = 0; i < 8; i++) {
@@ -273,13 +280,13 @@ public class ValidadorRegras {
 				Posicao posicaoDaPeca = new Posicao(tabuleiro.getCasa(i, j));
 				Peca peca = tabuleiro.getPecaNaCasa(posicaoDaPeca);
 				if(peca != null) {
-					//só as peças da cor do rei
+					//só as peças da cor pedida
 					if(peca.getCor().equals(cor)) {
 						//testa levar essa peça para cada uma das 64 casas
 						for(int k = 0; k < 8; k++) {
 							for(int l = 0; l < 8; l++) {
 								Posicao posicaoDestino = new Posicao(tabuleiro.getCasa(k, l));
-								//achou um lance legal: existe saída, então não é mate
+								//achou um lance legal: não precisa procurar mais
 								if(verificaLanceLegal(tabuleiro, posicaoDaPeca, posicaoDestino)) return true;
 							}
 						}

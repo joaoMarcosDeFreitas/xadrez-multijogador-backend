@@ -17,7 +17,7 @@ import com.xadrez.models.enums.ResultadoEnum.Resultado;
 import io.grpc.Status;
 
 //serviço gRPC do xadrez: recebe as chamadas dos clientes e usa a Partida para responder
-//os métodos que lidam com a partida são synchronized: só uma chamada por vez mexe no estado, o que evita race condition
+//os três métodos das chamadas são synchronized: só uma chamada por vez mexe no estado, o que evita race condition
 public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 	//a partida do servidor: é criada quando o servidor liga e só existe uma por servidor
 	private final Partida partida = new Partida(UUID.randomUUID().toString());
@@ -68,8 +68,8 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 				responderServidorSucessoConectarJogador(responseObserver, jogador, corPecaEscolhida);
 				return;
 			}
-		//qualquer erro inesperado vira INTERNAL (erro do servidor)
 		} catch(Exception exception) {
+			//qualquer erro inesperado vira INTERNAL (erro do servidor)
 			responseObserver.onError(Status.INTERNAL.withDescription("Erro interno do servidor!").asRuntimeException());
 		}
 	}
@@ -197,8 +197,8 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 			responseObserver.onNext(mensagem);
 			responseObserver.onCompleted();
 			return;	
-		//qualquer erro inesperado vira INTERNAL (erro do servidor)
 		} catch (Exception exception) {
+			//qualquer erro inesperado vira INTERNAL (erro do servidor)
 			responseObserver.onError(Status.INTERNAL.withDescription("Erro interno do servidor!").asRuntimeException());
 			return;
 		}
@@ -208,6 +208,7 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 	@Override
 	public synchronized void obterEstadoDoJogo(EstadoRequest request, io.grpc.stub.StreamObserver<com.xadrez.grpc.EstadoResponse> responseObserver) {
 		try {
+			//a partida informada existe?
 			if(!partida.getIdPartida().equals(request.getIdPartida())) {
 				responseObserver.onError(Status.NOT_FOUND.withDescription("ID da partida enviado não corresponde com o ID da partida registrado").asRuntimeException()); 
 				return;
@@ -222,8 +223,8 @@ public class XadrezServiceImpl extends XadrezServiceGrpc.XadrezServiceImplBase {
 					.build();
 			responseObserver.onNext(mensagem);
 			responseObserver.onCompleted();
-		//qualquer erro inesperado vira INTERNAL (erro do servidor)
 		} catch(Exception exception) {
+			//qualquer erro inesperado vira INTERNAL (erro do servidor)
 			responseObserver.onError(Status.INTERNAL.withDescription("Erro interno do servidor!").asRuntimeException());
 			return;
 		}

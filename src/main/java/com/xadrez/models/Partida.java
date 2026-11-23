@@ -67,8 +67,8 @@ public class Partida {
 
 	//---- jogadores ----
 	//a partida está cheia quando já tem 2 jogadores
-	public Boolean verificaSeJogoEstaCheio() {
-		return jogadores.size() >= 2 ? true : false;
+	public boolean verificaSeJogoEstaCheio() {
+		return jogadores.size() >= 2;
 	}
 
 	//lista as cores que ainda não têm jogador (as duas, só uma ou nenhuma)
@@ -104,7 +104,7 @@ public class Partida {
 	}
 
 	//diz se o jogador já está na partida (compara pelo id). É assim que o serviço reconhece uma reconexão
-	public Boolean verificaReconexao(Jogador jogadorBuscado) {
+	public boolean verificaReconexao(Jogador jogadorBuscado) {
 		//percorre os jogadores da partida
 		for(Jogador jogador : jogadores.values()) {
 			//mesmo id = é o mesmo jogador
@@ -259,7 +259,7 @@ public class Partida {
 	//anota que a posição de agora apareceu mais uma vez. Chamado depois de passar a vez, porque a vez faz parte da chave
 	public void registrarRepeticao() {
 		//a chave da posição é o texto das peças mais a cor da vez (posições iguais geram a mesma chave)
-		String chave = getPecasTabuleiro() + turno;
+		String chave = chaveDaPosicao();
 		
 		//quantas vezes essa posição já apareceu (0 se é a primeira)
 		int vezes = repeticoesDaMesaJogada.getOrDefault(chave, 0);
@@ -270,10 +270,14 @@ public class Partida {
 	//empate: a posição de agora já apareceu 3 vezes ou mais
 	public boolean verificaRepeticao() {
 		//a mesma chave usada no registrarRepeticao
-		String chave = getPecasTabuleiro() + turno;
+		String chave = chaveDaPosicao();
 		
 		//quantas vezes essa posição já apareceu
 		int vezes = repeticoesDaMesaJogada.getOrDefault(chave, 0);
 		return vezes >= 3;
+	}
+	
+	private String chaveDaPosicao() {
+		return getPecasTabuleiro() + turno;
 	}
 }

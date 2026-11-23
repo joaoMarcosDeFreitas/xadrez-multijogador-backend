@@ -184,7 +184,7 @@ public class Tabuleiro {
 			//a peça que está no destino volta para a origem
 			this.tabuleiro[this.posicaoOrigemMomento.getLinha()][this.posicaoOrigemMomento.getColuna()] = this.tabuleiro[this.posicaoDestinoMomento.getLinha()][this.posicaoDestinoMomento.getColuna()];
 			//o destino volta a ter a peça capturada (ou fica vazio)
-			this.tabuleiro[this.posicaoDestinoMomento.getLinha()][this.posicaoDestinoMomento.getColuna()] = this.pecaCapturadaMomento != null ? this.pecaCapturadaMomento : null;
+			this.tabuleiro[this.posicaoDestinoMomento.getLinha()][this.posicaoDestinoMomento.getColuna()] = this.pecaCapturadaMomento;
 			//a peça volta a ter o "já mexeu" que tinha antes
 			this.tabuleiro[this.posicaoOrigemMomento.getLinha()][this.posicaoOrigemMomento.getColuna()].setJaMexeu(this.jaMexeuMomento);
 			

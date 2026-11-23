@@ -44,11 +44,6 @@ public class Posicao {
 		return linha;
 	}
 
-	//volta o índice para o texto da casa (ex.: coluna 4 e linha 1 viram "e2"). É o caminho inverso do construtor
-	public String getCasa() {
-		return Character.toString((this.coluna) + 'a') + Character.toString((this.linha) + '1');
-	}
-
 	//deslocamento de colunas até o destino = coluna do destino menos a desta posição. Mantém o sinal (negativo = esquerda, positivo = direita)
 	public int getDeslocamentoColuna(Posicao posicaoDestino) {
 		return posicaoDestino.coluna - this.coluna;
@@ -75,6 +70,6 @@ public class Posicao {
 	//usa os mesmos campos do equals: posições iguais precisam ter o mesmo hash (regra do Java)
 	@Override
 	public int hashCode() {
-		return Objects.hash(Integer.valueOf(coluna), Integer.valueOf(linha));
+		return Objects.hash(coluna, linha);
 	}
 }

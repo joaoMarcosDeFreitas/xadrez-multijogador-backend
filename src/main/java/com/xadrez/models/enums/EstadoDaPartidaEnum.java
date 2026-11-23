@@ -8,7 +8,7 @@ public class EstadoDaPartidaEnum {
 		AGUARDANDO,
 		//os dois jogadores entraram e a partida está sendo jogada
 		EM_ANDAMENTO,
-		//a partida terminou (ainda não é usado)
+		//a partida terminou (por mate ou empate): não aceita mais jogadas
 		CONCLUIDA
 	}
 }

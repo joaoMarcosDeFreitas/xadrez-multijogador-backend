@@ -59,26 +59,7 @@ public class ValidadorRegras {
 		if(!verificaXeque(tabuleiro, corDoRei)) return false;
 		
 		//percorre as 64 casas procurando as peças da cor
-		for(int i = 0; i < 8; i++) {
-			for(int j = 0; j < 8; j++) {
-				Posicao posicaoDaPeca = new Posicao(tabuleiro.getCasa(i, j));
-				Peca peca = tabuleiro.getPecaNaCasa(posicaoDaPeca);
-				if(peca != null) {
-					//só as peças da cor do rei
-					if(peca.getCor().equals(corDoRei)) {
-						//testa levar essa peça para cada uma das 64 casas
-						for(int k = 0; k < 8; k++) {
-							for(int l = 0; l < 8; l++) {
-								Posicao posicaoDestino = new Posicao(tabuleiro.getCasa(k, l));
-								//achou um lance legal: existe saída, então não é mate
-								if(verificaLanceLegal(tabuleiro, posicaoDaPeca, posicaoDestino)) return false;
-							}
-						}
-					}
-				}
-			}
-		}
-		return true;
+		return !temLanceLegal(tabuleiro, corDoRei);
 	}
 
 	//afogamento (empate): o rei da cor NÃO está em xeque, mas nenhuma peça dela tem lance legal
@@ -87,26 +68,7 @@ public class ValidadorRegras {
 		if(verificaXeque(tabuleiro, corPeca)) return false;
 		
 		//percorre as 64 casas procurando as peças da cor
-		for(int i = 0; i < 8; i++) {
-			for(int j = 0; j < 8; j++) {
-				Posicao posicaoDaPeca = new Posicao(tabuleiro.getCasa(i, j));
-				Peca peca = tabuleiro.getPecaNaCasa(posicaoDaPeca);
-				if(peca != null) {
-					//só as peças da cor
-					if(peca.getCor().equals(corPeca)) {
-						//testa levar essa peça para cada uma das 64 casas
-						for(int k = 0; k < 8; k++) {
-							for(int l = 0; l < 8; l++) {
-								Posicao posicaoDestino = new Posicao(tabuleiro.getCasa(k, l));
-								//achou um lance legal: a cor ainda pode jogar, então não é afogamento
-								if(verificaLanceLegal(tabuleiro, posicaoDaPeca, posicaoDestino)) return false;
-							}
-						}
-					}
-				}
-			}
-		}
-		return true;	
+		return !temLanceLegal(tabuleiro, corPeca);	
 	}
 
 	//empate por material insuficiente (versão simples): só os reis, ou os reis e uma única peça menor (bispo ou cavalo, de qualquer cor)
@@ -147,8 +109,9 @@ public class ValidadorRegras {
 	}
 
 	//diz se o movimento tem o formato do roque e as peças estão em condição: rei e torre sem ter se movido, rei andando duas colunas na mesma linha e o caminho do rei até a torre livre
-	//não confere xeque (ver verificaRoqueSeguro). Fica separado do movimentoRei de propósito: o verificaXeque usa o movimentoRei, e um rei a duas casas não ataca
+	//não confere xeque (ver verificaRoqueSeguro). Fica separado do movimentoRei de propósito: o verificaXeque usa o validaMovimento (que chama o movimentoRei), e um rei a duas casas não ataca
 	public boolean verificaRoque(Tabuleiro tabuleiro, Posicao posicaoOrigem, Posicao posicaoDestino) {
+		int deslocamentoColuna = posicaoOrigem.getDeslocamentoColuna(posicaoDestino);
 		Peca pecaMovida = tabuleiro.getPecaNaCasa(posicaoOrigem);
 		//tem que ser um rei que ainda não se moveu
 		if(!pecaMovida.getTipoPeca().equals(TipoPeca.REI) || pecaMovida.getJaMexeu()) return false;
@@ -157,10 +120,10 @@ public class ValidadorRegras {
 		if(posicaoOrigem.getDeslocamentoLinha(posicaoDestino) != 0) return false;
 		
 		//e andando exatamente duas colunas (para a direita ou para a esquerda)
-		if(posicaoOrigem.getDeslocamentoColuna(posicaoDestino) != 2 && posicaoOrigem.getDeslocamentoColuna(posicaoDestino) != -2) return false;
+		if(deslocamentoColuna != 2 && deslocamentoColuna != -2) return false;
 
 		//para a direita: a torre está na coluna 7. Para a esquerda (else): na coluna 0
-		if(Integer.signum(posicaoOrigem.getDeslocamentoColuna(posicaoDestino)) == 1) {
+		if(Integer.signum(deslocamentoColuna) == 1) {
 			//casa do canto direito, na linha do rei
 			Posicao posicaoDaTorre = new Posicao(tabuleiro.getCasa(posicaoOrigem.getLinha(), 7));
 			Peca peca = tabuleiro.getPecaNaCasa(posicaoDaTorre);
@@ -214,32 +177,37 @@ public class ValidadorRegras {
 	//peão: anda reto (1 casa, ou 2 na primeira jogada) só para casa vazia; captura 1 casa na diagonal para a frente, só se houver peça no destino. As brancas sobem (linha +) e as pretas descem (linha -)
 	private boolean movimentoPeao(Tabuleiro tabuleiro, Posicao posicaoOrigem, Posicao posicaoDestino) {
 		Peca peca = tabuleiro.getPecaNaCasa(posicaoOrigem);
+		int deslocamentoLinha = posicaoOrigem.getDeslocamentoLinha(posicaoDestino);
+		int deslocamentoColuna = posicaoOrigem.getDeslocamentoColuna(posicaoDestino);
+		boolean destinoVazio = tabuleiro.getPecaNaCasa(posicaoDestino) == null;
 		
 		//brancas: avançam uma casa, na mesma coluna, para casa vazia
-		if(peca.getCor().equals(CorPecas.BRANCAS) && posicaoOrigem.getDeslocamentoLinha(posicaoDestino) == 1 && posicaoOrigem.getDeslocamentoColuna(posicaoDestino) == 0 && tabuleiro.getPecaNaCasa(posicaoDestino) == null) return true;
+		if(peca.getCor().equals(CorPecas.BRANCAS) && deslocamentoLinha == 1 && deslocamentoColuna == 0 && destinoVazio) return true;
 		
 		//brancas: na primeira jogada podem avançar duas casas, com o caminho livre e o destino vazio
-		if(peca.getCor().equals(CorPecas.BRANCAS) && !peca.getJaMexeu() && posicaoOrigem.getDeslocamentoLinha(posicaoDestino) == 2 && posicaoOrigem.getDeslocamentoColuna(posicaoDestino) == 0 && tabuleiro.getPecaNaCasa(posicaoDestino) == null && tabuleiro.verificarCasasEntreOrigemDestino(posicaoOrigem, posicaoDestino)) return true;
+		if(peca.getCor().equals(CorPecas.BRANCAS) && !peca.getJaMexeu() && deslocamentoLinha == 2 && deslocamentoColuna == 0 && destinoVazio && tabuleiro.verificarCasasEntreOrigemDestino(posicaoOrigem, posicaoDestino)) return true;
 		
 		//brancas: capturam uma casa na diagonal para a frente, se houver peça no destino
-		if(peca.getCor().equals(CorPecas.BRANCAS) && (posicaoOrigem.getDeslocamentoLinha(posicaoDestino) == 1 && (posicaoOrigem.getDeslocamentoColuna(posicaoDestino) == -1 || posicaoOrigem.getDeslocamentoColuna(posicaoDestino) == 1)) && tabuleiro.getPecaNaCasa(posicaoDestino) != null) return true;
+		if(peca.getCor().equals(CorPecas.BRANCAS) && (deslocamentoLinha == 1 && (deslocamentoColuna == -1 || deslocamentoColuna == 1)) && !destinoVazio) return true;
 		
 		//pretas: avançam uma casa (descendo), na mesma coluna, para casa vazia
-		if(peca.getCor().equals(CorPecas.PRETAS) && posicaoOrigem.getDeslocamentoLinha(posicaoDestino) == -1 && posicaoOrigem.getDeslocamentoColuna(posicaoDestino) == 0 && tabuleiro.getPecaNaCasa(posicaoDestino) == null) return true;
+		if(peca.getCor().equals(CorPecas.PRETAS) && deslocamentoLinha == -1 && deslocamentoColuna == 0 && destinoVazio) return true;
 		
 		//pretas: na primeira jogada podem avançar duas casas, com o caminho livre e o destino vazio
-		if(peca.getCor().equals(CorPecas.PRETAS) && !peca.getJaMexeu() && posicaoOrigem.getDeslocamentoLinha(posicaoDestino) == -2 && posicaoOrigem.getDeslocamentoColuna(posicaoDestino) == 0 && tabuleiro.getPecaNaCasa(posicaoDestino) == null && tabuleiro.verificarCasasEntreOrigemDestino(posicaoOrigem, posicaoDestino)) return true;
+		if(peca.getCor().equals(CorPecas.PRETAS) && !peca.getJaMexeu() && deslocamentoLinha == -2 && deslocamentoColuna == 0 && destinoVazio && tabuleiro.verificarCasasEntreOrigemDestino(posicaoOrigem, posicaoDestino)) return true;
 		
 		//pretas: capturam uma casa na diagonal para a frente, se houver peça no destino
-		if(peca.getCor().equals(CorPecas.PRETAS) && (posicaoOrigem.getDeslocamentoLinha(posicaoDestino) == -1 && (posicaoOrigem.getDeslocamentoColuna(posicaoDestino) == -1 || posicaoOrigem.getDeslocamentoColuna(posicaoDestino) == 1)) && tabuleiro.getPecaNaCasa(posicaoDestino) != null) return true;
+		if(peca.getCor().equals(CorPecas.PRETAS) && (deslocamentoLinha == -1 && (deslocamentoColuna == -1 || deslocamentoColuna == 1)) && !destinoVazio) return true;
 		
 		return false;
 	}
 
 	//torre: anda em linha reta (só a linha ou só a coluna muda), para outra casa, com o caminho livre
 	private boolean movimentoTorre(Tabuleiro tabuleiro, Posicao posicaoOrigem, Posicao posicaoDestino) {
+		int deslocamentoLinha = posicaoOrigem.getDeslocamentoLinha(posicaoDestino);
+		int deslocamentoColuna = posicaoOrigem.getDeslocamentoColuna(posicaoDestino);
 		//reta: um dos deslocamentos é 0, e a origem não pode ser igual ao destino; depois confere o caminho
-		if((posicaoOrigem.getDeslocamentoLinha(posicaoDestino) == 0 || posicaoOrigem.getDeslocamentoColuna(posicaoDestino) == 0) && !posicaoOrigem.getCasa().equals(posicaoDestino.getCasa())) 
+		if((deslocamentoLinha == 0 || deslocamentoColuna == 0) && !posicaoOrigem.equals(posicaoDestino)) 
 			if(tabuleiro.verificarCasasEntreOrigemDestino(posicaoOrigem, posicaoDestino)) return true;
 		
 		return false;
@@ -247,8 +215,10 @@ public class ValidadorRegras {
 
 	//bispo: anda na diagonal (os dois deslocamentos têm o mesmo tamanho e nenhum é 0), com o caminho livre
 	private boolean movimentoBispo(Tabuleiro tabuleiro, Posicao posicaoOrigem, Posicao posicaoDestino) {
+		int deslocamentoLinha = posicaoOrigem.getDeslocamentoLinha(posicaoDestino);
+		int deslocamentoColuna = posicaoOrigem.getDeslocamentoColuna(posicaoDestino);
 		//diagonal: os dois deslocamentos diferentes de 0 e com o mesmo tamanho (valor absoluto); depois confere o caminho
-		if((posicaoOrigem.getDeslocamentoLinha(posicaoDestino) != 0 && posicaoOrigem.getDeslocamentoColuna(posicaoDestino) != 0) && (Math.abs(posicaoOrigem.getDeslocamentoLinha(posicaoDestino)) == Math.abs(posicaoOrigem.getDeslocamentoColuna(posicaoDestino)))) 
+		if((deslocamentoLinha != 0 && deslocamentoColuna != 0) && (Math.abs(deslocamentoLinha) == Math.abs(deslocamentoColuna))) 
 			if(tabuleiro.verificarCasasEntreOrigemDestino(posicaoOrigem, posicaoDestino)) return true;
 		
 		return false;
@@ -256,16 +226,20 @@ public class ValidadorRegras {
 
 	//cavalo: anda em L (um deslocamento de 2 casas e o outro de 1) e pula as peças do meio, por isso não confere o caminho (o parâmetro tabuleiro não é usado aqui)
 	private boolean movimentoCavalo(Tabuleiro tabuleiro, Posicao posicaoOrigem, Posicao posicaoDestino) {
+		int linhas = Math.abs(posicaoOrigem.getDeslocamentoLinha(posicaoDestino));
+		int colunas = Math.abs(posicaoOrigem.getDeslocamentoColuna(posicaoDestino));
 		//L: (1 linha e 2 colunas) ou (2 linhas e 1 coluna), em valor absoluto
-		if((Math.abs(posicaoOrigem.getDeslocamentoLinha(posicaoDestino)) == 1 && Math.abs(posicaoOrigem.getDeslocamentoColuna(posicaoDestino)) == 2) || (Math.abs(posicaoOrigem.getDeslocamentoLinha(posicaoDestino)) == 2 && Math.abs(posicaoOrigem.getDeslocamentoColuna(posicaoDestino)) == 1)) return true;
+		if((linhas == 1 && colunas == 2) || (linhas == 2 && colunas == 1)) return true;
 		
 		return false;
 	}
 
 	//rei: anda uma casa em qualquer direção (reta ou diagonal). O roque tem regra própria (verificaRoque). O parâmetro tabuleiro não é usado aqui
 	private boolean movimentoRei(Tabuleiro tabuleiro, Posicao posicaoOrigem, Posicao posicaoDestino) {
+		int linhas = Math.abs(posicaoOrigem.getDeslocamentoLinha(posicaoDestino));
+		int colunas = Math.abs(posicaoOrigem.getDeslocamentoColuna(posicaoDestino));
 		//uma casa: (1 linha e 0 colunas), (1 e 1) ou (0 e 1), em valor absoluto
-		if((Math.abs(posicaoOrigem.getDeslocamentoLinha(posicaoDestino)) == 1 && Math.abs(posicaoOrigem.getDeslocamentoColuna(posicaoDestino)) == 0) || (Math.abs(posicaoOrigem.getDeslocamentoLinha(posicaoDestino)) == 1 && Math.abs(posicaoOrigem.getDeslocamentoColuna(posicaoDestino)) == 1) || (Math.abs(posicaoOrigem.getDeslocamentoLinha(posicaoDestino)) == 0 && Math.abs(posicaoOrigem.getDeslocamentoColuna(posicaoDestino)) == 1)) return true;
+		if((linhas == 1 && colunas == 0) || (linhas == 1 && colunas == 1) || (linhas == 0 && colunas == 1)) return true;
 		
 		return false;
 	}
@@ -285,6 +259,30 @@ public class ValidadorRegras {
 					if(!peca.getCor().equals(corDoRei)) {
 						//essa peça consegue ir até a casa do rei? Então o rei está em xeque
 						if(validaMovimento(tabuleiro, posicaoDaPeca, posicaoDoRei)) return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	
+	private boolean temLanceLegal(Tabuleiro tabuleiro, CorPecas cor) {
+		//percorre as 64 casas procurando as peças da cor
+		for(int i = 0; i < 8; i++) {
+			for(int j = 0; j < 8; j++) {
+				Posicao posicaoDaPeca = new Posicao(tabuleiro.getCasa(i, j));
+				Peca peca = tabuleiro.getPecaNaCasa(posicaoDaPeca);
+				if(peca != null) {
+					//só as peças da cor do rei
+					if(peca.getCor().equals(cor)) {
+						//testa levar essa peça para cada uma das 64 casas
+						for(int k = 0; k < 8; k++) {
+							for(int l = 0; l < 8; l++) {
+								Posicao posicaoDestino = new Posicao(tabuleiro.getCasa(k, l));
+								//achou um lance legal: existe saída, então não é mate
+								if(verificaLanceLegal(tabuleiro, posicaoDaPeca, posicaoDestino)) return true;
+							}
+						}
 					}
 				}
 			}

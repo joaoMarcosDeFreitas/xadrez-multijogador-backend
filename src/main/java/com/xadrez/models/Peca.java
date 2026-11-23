@@ -9,7 +9,7 @@ public class Peca {
 	private final TipoPeca tipoPeca;
 	//cor da peça (brancas ou pretas)
 	private final CorPecas cor;
-	//começa falso e vira verdadeiro no primeiro movimento. Serve para o avanço duplo do peão (e, no futuro, para o roque)
+	//começa falso e vira verdadeiro no primeiro movimento. Serve para o avanço duplo do peão e para o roque
 	private boolean jaMexeu;
 
 	//cria a peça com tipo, cor e se já se moveu (as peças iniciais nascem com falso)

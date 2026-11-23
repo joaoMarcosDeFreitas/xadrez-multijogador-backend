@@ -37,7 +37,7 @@ public class Jogador {
 	}
 
 	//devolve true se o nome é válido: de 3 a 15 caracteres e diferente do nome dos jogadores que já estão na partida (sem diferenciar maiúscula de minúscula)
-	public Boolean verificaNome(ArrayList<Jogador> jogadores) {
+	public boolean verificaNome(ArrayList<Jogador> jogadores) {
 		//verifica se tem menos que 3 letras ou mais que 15
 		if(this.nome.length() > 15 || this.nome.length() < 3) {
 			return false;
